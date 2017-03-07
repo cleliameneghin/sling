@@ -308,6 +308,8 @@
                         <exclude>hs_err_*.log</exclude>
                         <!-- Lucene index details (Oak 1.6) -->
                         <exclude>**/repository/index/*/index-details.txt</exclude>
+                        <!--Exclude IntelliJ project module files-->
+                        <exclude>*.iml</exclude>
                     </excludes>
                 </configuration>
                 <executions>
