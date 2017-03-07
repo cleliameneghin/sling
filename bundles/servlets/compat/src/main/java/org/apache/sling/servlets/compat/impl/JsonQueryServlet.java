@@ -56,7 +56,8 @@ import org.slf4j.LoggerFactory;
     @Property(name="sling.servlet.selectors", value="query"),
     @Property(name="sling.servlet.prefix", intValue=-1)
 })
-public class JsonQueryServlet extends SlingSafeMethodsServlet {
+public class
+JsonQueryServlet extends SlingSafeMethodsServlet {
 
     private static final long serialVersionUID = 1L;
 
