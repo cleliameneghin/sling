@@ -24,9 +24,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.SlingHttpServletRequest;
@@ -37,9 +39,12 @@ import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.io.JSONWriter;
+import org.apache.sling.commons.metrics.Meter;
 import org.apache.sling.servlets.get.impl.helpers.JsonResourceWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.sling.commons.metrics.Counter;
+import org.apache.sling.commons.metrics.MetricsService;
 
 /**
  * A SlingSafeMethodsServlet that renders the search results as JSON data
@@ -87,9 +92,21 @@ public class JsonQueryServlet extends SlingSafeMethodsServlet {
 
     private final JsonResourceWriter itemWriter;
 
+    @Reference
+    private MetricsService metricsService;
+
+    private Counter counter;
+    private Meter meter;
+
     public JsonQueryServlet() {
-        itemWriter = new JsonResourceWriter(null);
+        itemWriter = new JsonResourceWriter(null);  }
+
+    @Activate
+    private void activate(){
+        counter = metricsService.counter("countRequests");
+        meter = metricsService.meter("durchflussgeschwindigkeit");
     }
+
 
     /** True if our request wants the "tidy" pretty-printed format */
     protected boolean isTidy(SlingHttpServletRequest req) {
@@ -104,6 +121,8 @@ public class JsonQueryServlet extends SlingSafeMethodsServlet {
     @Override
     protected void doGet(SlingHttpServletRequest req,
             SlingHttpServletResponse resp) throws IOException {
+        counter.increment();
+        meter.mark();
         dumpResult(req, resp);
     }
 
