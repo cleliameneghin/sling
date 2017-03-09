@@ -28,7 +28,7 @@
     <groupId>org.apache.sling</groupId>
     <artifactId>sling</artifactId>
     <packaging>pom</packaging>
-    <version>30-SNAPSHOT</version>
+    <version>31-SNAPSHOT</version>
 
     <name>Apache Sling (Parent)</name>
     <description>The parent project for Apache Sling</description>
@@ -306,9 +306,14 @@
                         <exclude>**/*.rej</exclude>
                         <!-- Exclude Java crash log files -->
                         <exclude>hs_err_*.log</exclude>
+<<<<<<< HEAD
                         <exclude>**/*.rej</exclude>
                         <!-- Exclude Java crash log files -->
                         <exclude>hs_err_*.log</exclude>
+=======
+                        <!-- Lucene index details (Oak 1.6) -->
+                        <exclude>**/repository/index/*/index-details.txt</exclude>
+>>>>>>> 68e2b44a105169a5479c2dbe96e9c21f4d4a2117
                         <!--Exclude IntelliJ project module files-->
                         <exclude>*.iml</exclude>
                     </excludes>
@@ -400,6 +405,8 @@
                     <configuration>
                         <outputDirectory>${basedir}/target/classes</outputDirectory>
                         <obrRepository>NONE</obrRepository>
+                        <!-- Export SCR metadata to classpath to have them available in unit tests -->
+                        <exportScr>true</exportScr>
                         <instructions>
                             <Bundle-Category>sling</Bundle-Category>
                             <Bundle-DocURL>
@@ -418,6 +425,16 @@
                             <goals>
                                 <goal>baseline</goal>
                             </goals>
+                        </execution>
+                        <!-- Configure extra execution of 'manifest' in process-classes phase to make sure SCR metadata is generated before unit test runs -->
+                        <execution>
+                            <id>scr-metadata</id>
+                            <goals>
+                                <goal>manifest</goal>
+                            </goals>
+                            <configuration>
+                                <supportIncrementalBuild>true</supportIncrementalBuild>
+                            </configuration>
                         </execution>
                     </executions>
                 </plugin>
@@ -439,7 +456,7 @@
                 <plugin>
                     <groupId>org.apache.sling</groupId>
                     <artifactId>slingstart-maven-plugin</artifactId>
-                    <version>1.7.0</version>
+                    <version>1.7.2</version>
                 </plugin>
                 <plugin>
                     <groupId>org.codehaus.cargo</groupId>
@@ -1225,17 +1242,6 @@
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.service.metatype.annotations</artifactId>
-        </dependency>
-
-        <!-- DEPRECATED: OSGi support annotations -->
-        <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.scr.annotations</artifactId>
-        </dependency>
-        <!-- DEPRECATED: OSGi support annotations -->
-        <dependency>
-            <groupId>biz.aQute.bnd</groupId>
-            <artifactId>biz.aQute.bndlib</artifactId>
         </dependency>
     </dependencies>
 

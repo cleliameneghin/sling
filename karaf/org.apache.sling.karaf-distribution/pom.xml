@@ -24,7 +24,7 @@
   <parent>
     <groupId>org.apache.sling</groupId>
     <artifactId>sling</artifactId>
-    <version>29</version>
+    <version>30</version>
     <relativePath/>
   </parent>
 
@@ -38,7 +38,7 @@
   <!-- https://github.com/apache/karaf/blob/master/assemblies/apache-karaf/pom.xml -->
 
   <properties>
-    <org.apache.karaf.version>4.1.0-SNAPSHOT</org.apache.karaf.version>
+    <org.apache.karaf.version>4.1.0</org.apache.karaf.version>
     <jna.version>4.2.2</jna.version>
     <servicemix.specs.version>2.7.0</servicemix.specs.version>
     <xerces.version>2.11.0_1</xerces.version>
@@ -177,14 +177,6 @@
       <groupId>org.apache.sling</groupId>
       <artifactId>org.apache.sling.karaf-configs</artifactId>
       <version>${project.version}</version>
-      <classifier>org.apache.sling.jcr.base.internal.LoginAdminWhitelist.fragment-sling_validation</classifier>
-      <type>config</type>
-      <scope>runtime</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.sling</groupId>
-      <artifactId>org.apache.sling.karaf-configs</artifactId>
-      <version>${project.version}</version>
       <classifier>org.apache.sling.jcr.repoinit.impl.RepositoryInitializer</classifier>
       <type>config</type>
       <scope>runtime</scope>
@@ -217,7 +209,7 @@
       <groupId>org.apache.sling</groupId>
       <artifactId>org.apache.sling.karaf-configs</artifactId>
       <version>${project.version}</version>
-      <classifier>org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-event</classifier>
+      <classifier>org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-discovery</classifier>
       <type>config</type>
       <scope>runtime</scope>
     </dependency>
@@ -225,7 +217,7 @@
       <groupId>org.apache.sling</groupId>
       <artifactId>org.apache.sling.karaf-configs</artifactId>
       <version>${project.version}</version>
-      <classifier>org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-discovery</classifier>
+      <classifier>org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-event</classifier>
       <type>config</type>
       <scope>runtime</scope>
     </dependency>
@@ -241,7 +233,7 @@
       <groupId>org.apache.sling</groupId>
       <artifactId>org.apache.sling.karaf-configs</artifactId>
       <version>${project.version}</version>
-      <classifier>org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-servlets</classifier>
+      <classifier>org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-installer_jcr</classifier>
       <type>config</type>
       <scope>runtime</scope>
     </dependency>
@@ -249,7 +241,15 @@
       <groupId>org.apache.sling</groupId>
       <artifactId>org.apache.sling.karaf-configs</artifactId>
       <version>${project.version}</version>
-      <classifier>org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-scripting</classifier>
+      <classifier>org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-jcr_resource</classifier>
+      <type>config</type>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.karaf-configs</artifactId>
+      <version>${project.version}</version>
+      <classifier>org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-resourceresolver</classifier>
       <type>config</type>
       <scope>runtime</scope>
     </dependency>
@@ -266,6 +266,30 @@
       <artifactId>org.apache.sling.karaf-configs</artifactId>
       <version>${project.version}</version>
       <classifier>org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-scripting_thymeleaf</classifier>
+      <type>config</type>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.karaf-configs</artifactId>
+      <version>${project.version}</version>
+      <classifier>org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-scripting</classifier>
+      <type>config</type>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.karaf-configs</artifactId>
+      <version>${project.version}</version>
+      <classifier>org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-servlets</classifier>
+      <type>config</type>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.karaf-configs</artifactId>
+      <version>${project.version}</version>
+      <classifier>org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-validation</classifier>
       <type>config</type>
       <scope>runtime</scope>
     </dependency>
@@ -357,6 +381,7 @@
             <feature>sling-extension-pipes</feature>
             <feature>sling-extension-query</feature>
             <feature>sling-extension-resource-inventory</feature>
+            <feature>sling-extension-resource-presence</feature>
             <feature>sling-extension-resourcemerger</feature>
             <feature>sling-extension-rewriter</feature>
             <feature>sling-extension-security</feature>
@@ -366,6 +391,7 @@
             <feature>sling-extension-xss</feature>
             <!-- Apache Sling Installer -->
             <feature>sling-installer</feature>
+            <feature>sling-installer-healthcheck</feature>
             <feature>sling-installer-provider-file</feature>
             <feature>sling-installer-provider-jcr</feature>
             <!-- Apache Sling JCR -->

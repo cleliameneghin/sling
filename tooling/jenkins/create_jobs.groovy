@@ -58,6 +58,9 @@ def modules = [
         location: 'bundles/commons/fsclassloader'
     ],
     [
+        location: 'bundles/commons/fscontentparser'
+    ],
+    [
         location: 'bundles/commons/contentdetection'
     ],
     [
@@ -179,6 +182,10 @@ def modules = [
         jdks: ["1.8"]
     ],
     [
+        location: 'bundles/extensions/org.apache.sling.resource.presence',
+        jdks: ["1.8"]
+    ],
+    [
         location: 'bundles/extensions/serviceusermapper'
     ],
     [
@@ -194,10 +201,6 @@ def modules = [
     ],
     [
         location: 'bundles/extensions/validation/examples',
-        jdks: ["1.8"]
-    ],
-    [
-        location: 'bundles/extensions/validation/it-http',
         jdks: ["1.8"]
     ],
     [
@@ -251,9 +254,6 @@ def modules = [
     ],
     [
         location: 'bundles/jcr/jackrabbit-base'
-    ],
-    [
-        location: 'bundles/jcr/jackrabbit-server'
     ],
     [
         location: 'bundles/jcr/jackrabbit-usermanager'
@@ -587,24 +587,30 @@ def modules = [
     [
         location: "installer/providers/file"
     ],
-//    [
-//        location: 'karaf/org.apache.sling.karaf-distribution'
-//    ],
-//    [
-//        location: 'karaf/org.apache.sling.karaf-features'
-//    ],
-//    [
-//        location: 'karaf/org.apache.sling.karaf-integration-tests'
-//    ],
-//    [
-//        location: 'karaf/org.apache.sling.karaf-launchpad-oak-tar-integration-tests'
-//    ],
-//    [
-//        location: 'karaf/org.apache.sling.karaf-repoinit'
-//    ],
-//    [
-//        location: 'karaf/org.apache.sling.karaf-configs'
-//    ],
+    [
+        location: 'karaf/org.apache.sling.karaf-distribution',
+        jdks: ["1.8"]
+    ],
+    [
+        location: 'karaf/org.apache.sling.karaf-features',
+        jdks: ["1.8"]
+    ],
+    [
+        location: 'karaf/org.apache.sling.karaf-integration-tests',
+        jdks: ["1.8"]
+    ],
+    [
+        location: 'karaf/org.apache.sling.karaf-launchpad-oak-tar-integration-tests',
+        jdks: ["1.8"]
+    ],
+    [
+        location: 'karaf/org.apache.sling.karaf-repoinit',
+        jdks: ["1.8"]
+    ],
+    [
+        location: 'karaf/org.apache.sling.karaf-configs',
+        jdks: ["1.8"]
+    ],
     [
         location: 'launchpad/api',
         jdks: ["1.8"]

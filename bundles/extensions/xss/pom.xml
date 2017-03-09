@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>28</version>
+        <version>30</version>
         <relativePath />
     </parent>
 
@@ -32,7 +32,7 @@
     <!-- ======================================================================= -->
     <artifactId>org.apache.sling.xss</artifactId>
     <packaging>bundle</packaging>
-    <version>1.0.17-SNAPSHOT</version>
+    <version>1.0.19-SNAPSHOT</version>
 
     <name>Apache Sling XSS Protection Bundle</name>
     <description>
@@ -243,6 +243,16 @@
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>osgi.core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.scr.annotations</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>biz.aQute.bnd</groupId>
+            <artifactId>biz.aQute.bndlib</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>

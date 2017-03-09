@@ -101,6 +101,7 @@
         <!-- The commons sub project -->
         <module>bundles/commons/classloader</module>
         <module>bundles/commons/fsclassloader</module>
+        <module>bundles/commons/fscontentparser</module>
         <module>bundles/commons/compiler</module>
         <module>bundles/commons/json</module>
         <module>bundles/commons/log</module>
@@ -129,7 +130,6 @@
         <!--
         <module>bundles/jcr/jackrabbit-base</module>
         -->
-        <module>bundles/jcr/jackrabbit-server</module>
         <module>bundles/jcr/jackrabbit-usermanager</module>
         <module>bundles/jcr/jackrabbit-accessmanager</module>
         <module>bundles/jcr/jcr-wrapper</module>

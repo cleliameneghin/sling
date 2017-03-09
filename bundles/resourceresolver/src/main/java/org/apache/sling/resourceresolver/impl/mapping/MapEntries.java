@@ -61,7 +61,6 @@ import org.apache.sling.api.resource.observation.ExternalResourceChangeListener;
 import org.apache.sling.api.resource.observation.ResourceChange;
 import org.apache.sling.api.resource.observation.ResourceChangeListener;
 import org.apache.sling.api.resource.path.Path;
-import org.apache.sling.resourceresolver.impl.ResourceResolverFactoryImpl;
 import org.apache.sling.resourceresolver.impl.ResourceResolverImpl;
 import org.apache.sling.resourceresolver.impl.mapping.MapConfigurationProvider.VanityPathConfig;
 import org.osgi.framework.BundleContext;
@@ -263,10 +262,10 @@ public class MapEntries implements
     }
 
     private boolean addResource(final String path, final AtomicBoolean resolverRefreshed) {
-        this.refreshResolverIfNecessary(resolverRefreshed);
-
         this.initializing.lock();
+
         try {
+            this.refreshResolverIfNecessary(resolverRefreshed);
             final Resource resource = resolver.getResource(path);
             if (resource != null) {
                 boolean changed = false;
@@ -287,10 +286,10 @@ public class MapEntries implements
     }
 
     private boolean updateResource(final String path, final AtomicBoolean resolverRefreshed) {
-        this.refreshResolverIfNecessary(resolverRefreshed);
-
         this.initializing.lock();
+
         try {
+            this.refreshResolverIfNecessary(resolverRefreshed);
             final Resource resource = resolver.getResource(path);
             if (resource != null) {
                 boolean changed = false;
@@ -655,10 +654,10 @@ public class MapEntries implements
         if ( this.factory.isMapConfiguration(path)
              || (isDelete && this.factory.getMapRoot().startsWith(path + "/")) ) {
             if ( hasReloadedConfig.compareAndSet(false, true) ) {
-                refreshResolverIfNecessary(resolverRefreshed);
-
                 this.initializing.lock();
+
                 try {
+                    refreshResolverIfNecessary(resolverRefreshed);
                     doUpdateConfiguration();
                 } finally {
                     this.initializing.unlock();

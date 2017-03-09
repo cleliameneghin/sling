@@ -22,16 +22,16 @@ import java.util.ResourceBundle;
 
 import javax.annotation.Nonnull;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 @ProviderType
 public interface ValidationFailure {
 
     /**
-     * @param resourceBundle ResourceBundle in which to look up the according message (used for i18n)
+     * @param resourceBundle ResourceBundle in which to look up the according message (used for i18n), if {@code null} is given, the default resource bundle is used.
      * @return the failure message
      */
-    @Nonnull String getMessage(@Nonnull ResourceBundle resourceBundle);
+    @Nonnull String getMessage(ResourceBundle resourceBundle);
 
     /**
      * Returns the relative location of the property/resource/value which triggered this validation failure.

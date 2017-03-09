@@ -18,6 +18,7 @@
  */
 package org.apache.sling.validation.spi;
 
+import java.io.Serializable;
 import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.ResourceBundle;
@@ -30,37 +31,59 @@ import org.apache.sling.validation.ValidationFailure;
  * Wraps a message key (being looked up in a {@link ResourceBundle}), messageArguments (being used with {@link MessageFormat#format(String, Object...)}
  * and the location where the validation failure occurred.
  */
-public class DefaultValidationFailure implements ValidationFailure {
+public class DefaultValidationFailure implements ValidationFailure, Serializable {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = -1748031688917555982L;
     private final @Nonnull String location;
     private final @Nonnull String messageKey;
     private final Object[] messageArguments;
+    private final transient @Nonnull ResourceBundle defaultResourceBundle;
     private final int severity;
 
-    public final static int DEFAULT_SEVERITY = 0;
+    /**
+    * Constructor of a validation failure.
+    * @param validationContext the context from which to extract location, severity and default resource bundle
+    * @param messageKey the key to look up in the resource bundle
+    * @param messageArguments the arguments to be used with the looked up value from the resource bundle (given in {@link #getMessage(ResourceBundle)}
+    */
+   public DefaultValidationFailure(@Nonnull ValidationContext validationContext, @Nonnull String messageKey, Object... messageArguments) {
+       this.location = validationContext.getLocation();
+       this.severity = validationContext.getSeverity();
+       this.defaultResourceBundle = validationContext.getDefaultResourceBundle();
+       this.messageKey = messageKey;
+       this.messageArguments = messageArguments;
+   }
 
     /**
-     * Constructor of a validation failure. The message is constructed by looking up the given messageKey from a resourceBundle.
-     * and formatting it using the given messageArguments via {@link MessageFormat#format(String, Object...)}.
-     * @param location the location
+     * Constructor of a validation failure.
+     * @param location the location where the validation error occured
      * @param severity the severity of this failure (may be {@code null}), which leads to setting it to the {@link #DEFAULT_SEVERITY}
+     * @param defaultResourceBundle the default resourceBundle which is used to resolve the {@link messageKey} in {@link #getMessage(ResourceBundle)}
+     *  if {@code null} is provided as parameter.
      * @param messageKey the key to look up in the resource bundle
      * @param messageArguments the arguments to be used with the looked up value from the resource bundle (given in {@link #getMessage(ResourceBundle)}
      */
-    public DefaultValidationFailure(@Nonnull String location, Integer severity, @Nonnull String messageKey, Object... messageArguments) {
+    public DefaultValidationFailure(@Nonnull String location, int severity, @Nonnull ResourceBundle defaultResourceBundle, @Nonnull String messageKey, Object... messageArguments) {
         this.location = location;
-        if (severity != null) {
-            this.severity = severity;
-        } else {
-            this.severity = DEFAULT_SEVERITY;
-        }
+        this.severity = severity;
         this.messageKey = messageKey;
         this.messageArguments = messageArguments;
+        this.defaultResourceBundle = defaultResourceBundle;
     }
 
-    @SuppressWarnings("null")
+    @SuppressWarnings({ "null", "unused" })
     @Override
-    public @Nonnull String getMessage(@Nonnull ResourceBundle resourceBundle) {
+    public @Nonnull String getMessage(ResourceBundle resourceBundle) {
+        if (resourceBundle == null) {
+            resourceBundle = defaultResourceBundle;
+        }
+        if (resourceBundle == null) {
+            // this should only happen if this class was deserialized because there the default resource bundle is missing
+            return "No defaultResourceBundle found to resolve, messageKey = " + messageKey + ", messageArguments: " + Arrays.toString(messageArguments);
+        }
         return MessageFormat.format(resourceBundle.getString(messageKey), messageArguments);
     }
 
@@ -100,17 +123,11 @@ public class DefaultValidationFailure implements ValidationFailure {
         if (getClass() != obj.getClass())
             return false;
         DefaultValidationFailure other = (DefaultValidationFailure) obj;
-        if (location == null) {
-            if (other.location != null)
-                return false;
-        } else if (!location.equals(other.location))
+        if (!location.equals(other.location))
             return false;
         if (!Arrays.equals(messageArguments, other.messageArguments))
             return false;
-        if (messageKey == null) {
-            if (other.messageKey != null)
-                return false;
-        } else if (!messageKey.equals(other.messageKey))
+        if (!messageKey.equals(other.messageKey))
             return false;
         if (severity != other.severity)
             return false;

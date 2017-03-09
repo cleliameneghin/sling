@@ -18,18 +18,27 @@
  */
 package org.apache.sling.validation.spi;
 
-import java.text.MessageFormat;
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.ResourceBundle;
 
 import javax.annotation.Nonnull;
 
 import org.apache.sling.validation.ValidationFailure;
 import org.apache.sling.validation.ValidationResult;
 
-public class DefaultValidationResult implements ValidationResult {
+/**
+ * Default implementation of {@link ValidationResult} wrapping a list of {@link ValidationFailure}s.
+ *
+ */
+public class DefaultValidationResult implements ValidationResult, Serializable {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = -3370520716090956033L;
     private final boolean isValid;
     private final @Nonnull List<ValidationFailure> failures;
 
@@ -41,14 +50,27 @@ public class DefaultValidationResult implements ValidationResult {
     /** 
      * Constructs a result with one failure message. The message is constructed by looking up the given messageKey from a resourceBundle.
      * and formatting it using the given messageArguments via {@link MessageFormat#format(String, Object...)}.
-     * @param location the location.
-     * @param severity the severity of the embedded failure (may be {@code null}), which leads to setting it to the {@link #DEFAULT_SEVERITY}.
+     * @param validationContext the context from which to take the location, severity and default resource bundle
      * @param messageKey the message key used for looking up a value in the resource bundle given in {@link ValidationFailure#getMessage(java.util.ResourceBundle)}.
      * @param messageArguments optional number of arguments being used in {@link MessageFormat#format(String, Object...)}
      */
-    public DefaultValidationResult(@Nonnull String location, Integer severity, @Nonnull String messageKey, Object... messageArguments) {
+    public DefaultValidationResult(@Nonnull ValidationContext validationContext, @Nonnull String messageKey, Object... messageArguments) {
         this.isValid = false;
-        this.failures = Collections.<ValidationFailure>singletonList(new DefaultValidationFailure(location, severity, messageKey, messageArguments));
+        this.failures = Collections.<ValidationFailure>singletonList(new DefaultValidationFailure(validationContext, messageKey, messageArguments));
+    }
+
+    /** 
+     * Constructs a result with one failure message. The message is constructed by looking up the given messageKey from a resourceBundle.
+     * and formatting it using the given messageArguments via {@link MessageFormat#format(String, Object...)}.
+     * @param location the location.
+     * @param severity the severity of the embedded failure (may be {@code null}), which leads to setting it to the {@link #DEFAULT_SEVERITY}.
+     * @param defaultResourceBundle the default resourceBundle which is used to resolve the {@link messageKey} if no other bundle is provided.
+     * @param messageKey the message key used for looking up a value in the resource bundle given in {@link ValidationFailure#getMessage(java.util.ResourceBundle)}.
+     * @param messageArguments optional number of arguments being used in {@link MessageFormat#format(String, Object...)}
+     */
+    public DefaultValidationResult(@Nonnull String location, int severity, @Nonnull ResourceBundle defaultResourceBundle, @Nonnull String messageKey, Object... messageArguments) {
+        this.isValid = false;
+        this.failures = Collections.<ValidationFailure>singletonList(new DefaultValidationFailure(location, severity, defaultResourceBundle, messageKey, messageArguments));
     }
 
     public DefaultValidationResult(ValidationFailure... failures) {
@@ -67,5 +89,8 @@ public class DefaultValidationResult implements ValidationResult {
         return failures;
     }
 
+    /**
+     * Used to indicated a valid result.
+     */
     public static final @Nonnull DefaultValidationResult VALID = new DefaultValidationResult(true);
 }

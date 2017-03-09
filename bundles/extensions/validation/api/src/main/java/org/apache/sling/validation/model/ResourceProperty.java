@@ -24,7 +24,7 @@ import java.util.regex.Pattern;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * Describes a {@link org.apache.sling.api.resource.Resource} property.
@@ -38,7 +38,7 @@ public interface ResourceProperty {
      *
      * @return the name
      */
-    String getName();
+    @Nonnull String getName();
     
     /**
      * Returns the name pattern for this property. In case this is not returning {@code null}, this pattern is used for finding the properties which should be validated.

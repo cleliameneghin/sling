@@ -21,12 +21,9 @@ import java.nio.charset.StandardCharsets;
 
 import javax.script.Bindings;
 import javax.script.ScriptContext;
-import javax.script.ScriptEngineFactory;
 import javax.script.ScriptException;
 
-import freemarker.ext.beans.BeansWrapper;
 import freemarker.log.Logger;
-import freemarker.template.TemplateHashModel;
 import freemarker.template.Version;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScriptHelper;
@@ -42,20 +39,17 @@ import freemarker.template.Template;
 public class FreemarkerScriptEngine extends AbstractSlingScriptEngine {
     private static final Logger log = Logger.getLogger(FreemarkerScriptEngine.class.getName());
 
-    private final Version version = new Version(2, 3, 24);
+    private final Version version = new Version(2, 3, 25);
 
     private final Configuration configuration;
 
-    private final BeansWrapper beansWrapper;
+    private final FreemarkerScriptEngineFactory freemarkerScriptEngineFactory;
 
-    private final TemplateHashModel statics;
-
-    public FreemarkerScriptEngine(ScriptEngineFactory factory) {
-        super(factory);
+    public FreemarkerScriptEngine(final FreemarkerScriptEngineFactory freemarkerScriptEngineFactory) {
+        super(freemarkerScriptEngineFactory);
+        this.freemarkerScriptEngineFactory = freemarkerScriptEngineFactory;
         configuration = new Configuration(version);
         configuration.setDefaultEncoding(StandardCharsets.UTF_8.name());
-        beansWrapper = new BeansWrapper(version);
-        statics = beansWrapper.getStaticModels();
     }
 
     public Object eval(Reader reader, ScriptContext scriptContext)
@@ -76,7 +70,7 @@ public class FreemarkerScriptEngine extends AbstractSlingScriptEngine {
 
         try {
             Template tmpl = new Template(scriptName, reader, configuration);
-            bindings.put("statics", statics);
+            freemarkerScriptEngineFactory.getTemplateModels().forEach(bindings::put);
             tmpl.process(bindings, scriptContext.getWriter());
         } catch (Throwable t) {
             log.error("Failure running Freemarker script.", t);

@@ -24,7 +24,7 @@
   <parent>
     <groupId>org.apache.sling</groupId>
     <artifactId>sling</artifactId>
-    <version>29</version>
+    <version>30</version>
     <relativePath/>
   </parent>
 
@@ -123,11 +123,6 @@
                   <type>config</type>
                 </artifact>
                 <artifact>
-                  <classifier>org.apache.sling.jcr.base.internal.LoginAdminWhitelist.fragment-sling_validation</classifier>
-                  <file>src/main/resources/org.apache.sling.jcr.base.internal.LoginAdminWhitelist.fragment-sling_validation.config</file>
-                  <type>config</type>
-                </artifact>
-                <artifact>
                   <classifier>org.apache.sling.jcr.repoinit.impl.RepositoryInitializer</classifier>
                   <file>src/main/resources/org.apache.sling.jcr.repoinit.impl.RepositoryInitializer.config</file>
                   <type>config</type>
@@ -173,6 +168,11 @@
                   <type>config</type>
                 </artifact>
                 <artifact>
+                  <classifier>org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-resource_presence</classifier>
+                  <file>src/main/resources/org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-resource_presence.config</file>
+                  <type>config</type>
+                </artifact>
+                <artifact>
                   <classifier>org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-resourceresolver</classifier>
                   <file>src/main/resources/org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-resourceresolver.config</file>
                   <type>config</type>
@@ -195,6 +195,11 @@
                 <artifact>
                   <classifier>org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-scripting_thymeleaf</classifier>
                   <file>src/main/resources/org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-scripting_thymeleaf.config</file>
+                  <type>config</type>
+                </artifact>
+                <artifact>
+                  <classifier>org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-validation</classifier>
+                  <file>src/main/resources/org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-validation.config</file>
                   <type>config</type>
                 </artifact>
                 <artifact>

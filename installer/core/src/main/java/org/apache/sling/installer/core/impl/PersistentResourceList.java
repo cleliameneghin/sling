@@ -29,11 +29,12 @@ import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.sling.installer.api.InstallableResource;
 import org.apache.sling.installer.api.event.InstallationListener;
@@ -225,20 +226,8 @@ public class PersistentResourceList {
                 t = new EntityResourceList(input.getEntityId(), this.listener);
                 this.data.put(input.getEntityId(), t);
             }
-            t.addOrUpdate(input);
 
-            // find stale resources (other entity ids with the same URL)
-            Collection<RegisteredResource> staleResources = getResourcesWithUrl(input.getURL(), input.getEntityId());
-            for (RegisteredResource staleResource : staleResources) {
-                // get according group
-                EntityResourceList group = this.data.get(staleResource.getEntityId());
-                if (group == null) {
-                    logger.error("Could not get group of stale resource {}", staleResource);
-                } else {
-                    group.remove(input.getURL());
-                    logger.warn("Removing stale resource {}, overwritten by {}", staleResource, input);
-                }
-            }
+            t.addOrUpdate(input);
         } else {
             // check if there is an old resource and remove it first
             if ( this.untransformedResources.contains(input) ) {
@@ -254,7 +243,6 @@ public class PersistentResourceList {
     public List<RegisteredResource> getUntransformedResources() {
         return this.untransformedResources;
     }
-   
 
     /**
      * Remove a resource by url.
@@ -297,27 +285,6 @@ public class PersistentResourceList {
     }
 
     /**
-     * 
-     * @param url the url of the resource to look for
-     * @param entityIdToSkip all resources having this entity id should in no case be returned
-     * @return the list of all registered resources with the given url, not having the entityId which should be skipped.
-     */
-    private Collection<RegisteredResource> getResourcesWithUrl(String url, String entityIdToSkip) {
-        Collection<RegisteredResource> foundResources = new LinkedList<>();
-        for(final EntityResourceList group : this.data.values()) {
-            if (group.getResourceId().equals(entityIdToSkip)) {
-                continue;
-            }
-            for (RegisteredResource resource : group.listResources()) {
-                if (resource.getURL().equals(url)) {
-                    foundResources.add(resource);
-                }
-            }
-        }
-        return foundResources;
-    }
-
-    /**
      * Compact the internal state and remove empty groups.
      * @return <code>true</code> if another cycle should be started.
      */
@@ -343,6 +310,7 @@ public class PersistentResourceList {
         // remove resource from unknown list
         this.untransformedResources.remove(resource);
         try {
+            Set<String> entityIds = new HashSet<String>();
             for(int i=0; i<result.length; i++) {
                 // check the result
                 final TransformationResult tr = result[i];
@@ -357,6 +325,14 @@ public class PersistentResourceList {
                 }
                 final RegisteredResourceImpl clone =  (RegisteredResourceImpl)((RegisteredResourceImpl)resource).clone(result[i]);
                 this.checkInstallable(clone);
+                entityIds.add(clone.getEntityId());
+            }
+            for (EntityResourceList group : this.data.values()) {
+                if (!entityIds.contains(group.getResourceId())) {
+                    if (group.removeInternal(resource.getURL())) {
+                        logger.debug("Removed stale resources from group with entityid: {} because after transforming {} the entityids have changed.", group.getResourceId(), resource);
+                    }
+                }
             }
         } catch (final IOException ioe) {
             logger.warn("Ignoring resource. Error during processing of " + resource, ioe);

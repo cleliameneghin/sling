@@ -23,8 +23,8 @@ import javax.annotation.Nonnull;
 
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.validation.spi.Validator;
+import org.osgi.annotation.versioning.ProviderType;
 
-import aQute.bnd.annotation.ProviderType;
 
 /**
  * Defines a validator instance with information about the type and the parameterization of the validator.
@@ -53,7 +53,9 @@ public interface ParameterizedValidator {
 
     /**
      *
-     * @return the severity of validation failures emitted by this validator. May be {@code null} in case it is not specified.
+     * @return the severity of validation failures emitted by this validator.
+     * Was either set on the model or on the {@link Validator} itself.
+     * May be {@code null} in case it was set on none of them.
      */
     @CheckForNull Integer getSeverity();
 
