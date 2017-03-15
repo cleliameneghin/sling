@@ -24,9 +24,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.SlingHttpServletRequest;
@@ -40,6 +42,9 @@ import org.apache.sling.commons.json.io.JSONWriter;
 import org.apache.sling.servlets.get.impl.helpers.JsonResourceWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import org.apache.sling.commons.metrics.Meter;
+import  org.apache.sling.commons.metrics.MetricsService;
 
 /**
  * A SlingSafeMethodsServlet that renders the search results as JSON data
@@ -88,6 +93,10 @@ JsonQueryServlet extends SlingSafeMethodsServlet {
 
     private final JsonResourceWriter itemWriter;
 
+    @Reference
+    private MetricsService metricsService;
+    private Meter meter;
+
     public JsonQueryServlet() {
         itemWriter = new JsonResourceWriter(null);
     }
@@ -102,9 +111,15 @@ JsonQueryServlet extends SlingSafeMethodsServlet {
         return false;
     }
 
+    @Activate
+    private void activate(){
+        meter = metricsService.meter("data_flow_jsonQueryServlet");
+    }
+
     @Override
     protected void doGet(SlingHttpServletRequest req,
             SlingHttpServletResponse resp) throws IOException {
+        meter.mark();
         dumpResult(req, resp);
     }
 
