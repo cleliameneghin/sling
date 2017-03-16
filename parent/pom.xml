@@ -306,8 +306,14 @@
                         <exclude>**/*.rej</exclude>
                         <!-- Exclude Java crash log files -->
                         <exclude>hs_err_*.log</exclude>
+<<<<<<< HEAD
+                        <exclude>**/*.rej</exclude>
+                        <!-- Exclude Java crash log files -->
+                        <exclude>hs_err_*.log</exclude>
+=======
                         <!-- Lucene index details (Oak 1.6) -->
                         <exclude>**/repository/index/*/index-details.txt</exclude>
+>>>>>>> 68e2b44a105169a5479c2dbe96e9c21f4d4a2117
                         <!--Exclude IntelliJ project module files-->
                         <exclude>*.iml</exclude>
                     </excludes>
@@ -375,6 +381,7 @@
                             <version>1.7.6</version>
                         </dependency>
                     </dependencies>
+
                     <executions>
                         <execution>
                             <id>generate-scr-scrdescriptor</id>

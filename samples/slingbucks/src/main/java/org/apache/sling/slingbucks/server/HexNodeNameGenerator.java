@@ -18,8 +18,12 @@ package org.apache.sling.slingbucks.server;
 
 import java.util.Random;
 
+import aQute.libg.log.Logger;
+import org.apache.avalon.framework.component.Component;
+import org.apache.batik.util.Service;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.log4j.spi.LoggerFactory;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.servlets.post.NodeNameGenerator;
 import org.slf4j.Logger;
@@ -29,14 +33,14 @@ import org.slf4j.LoggerFactory;
  *  
  *  Sling calls this for all "create node" requests to its
  *  POST servlet. This reacts to POST on our ORDERS_PATH, and
- *  returns a somewhat long random hex string for the node name. 
+ *  returns a somewhat long random hex string for the node name.
  */
 @Component
 @Service
 public class HexNodeNameGenerator implements NodeNameGenerator {
     private static final Random random = new Random(System.currentTimeMillis());
     private final Logger log = LoggerFactory.getLogger(getClass());
-    
+
     /** @inheritDoc */
     public String getNodeName(
             SlingHttpServletRequest request, 
