@@ -108,10 +108,21 @@
         	<groupId>org.apache.felix</groupId>
         	<artifactId>org.apache.felix.scr.annotations</artifactId>
         </dependency>
+<<<<<<< HEAD
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.commons.metrics</artifactId>
             <version>1.2.1-SNAPSHOT</version>
         </dependency>
+=======
+        <!--insert-->
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.commons.metrics</artifactId>
+            <version>1.2.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <!--insert-->
+>>>>>>> 8d7a14cc768eb3227aba753f028ca56cdbf61ce1
     </dependencies>
 </project>
