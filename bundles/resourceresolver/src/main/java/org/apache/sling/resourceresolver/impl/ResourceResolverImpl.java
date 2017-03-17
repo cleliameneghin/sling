@@ -34,6 +34,7 @@ import javax.annotation.CheckForNull;
 import javax.jcr.Session;
 import javax.servlet.http.HttpServletRequest;
 
+
 import org.apache.sling.adapter.annotations.Adaptable;
 import org.apache.sling.adapter.annotations.Adapter;
 import org.apache.sling.api.SlingException;
@@ -90,6 +91,8 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
 
     private volatile Exception closedResolverException;
 
+
+
     public ResourceResolverImpl(final CommonResourceResolverFactoryImpl factory, final boolean isAdmin, final Map<String, Object> authenticationInfo) throws LoginException {
         this(factory, isAdmin, authenticationInfo, factory.getResourceProviderTracker());
     }
@@ -100,6 +103,8 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
         this.control = createControl(resourceProviderTracker, authenticationInfo, isAdmin);
         this.factory.register(this, control);
     }
+
+
 
     /**
      * Constructor for cloning the resource resolver

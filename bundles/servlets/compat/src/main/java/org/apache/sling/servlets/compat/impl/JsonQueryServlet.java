@@ -43,7 +43,6 @@ import org.apache.sling.commons.metrics.Meter;
 import org.apache.sling.servlets.get.impl.helpers.JsonResourceWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.sling.commons.metrics.Counter;
 import org.apache.sling.commons.metrics.MetricsService;
 
 import org.apache.sling.commons.metrics.Meter;
@@ -98,21 +97,10 @@ JsonQueryServlet extends SlingSafeMethodsServlet {
 
     @Reference
     private MetricsService metricsService;
-<<<<<<< HEAD
-=======
-
-    private Counter counter;
->>>>>>> 8d7a14cc768eb3227aba753f028ca56cdbf61ce1
     private Meter meter;
 
     public JsonQueryServlet() {
         itemWriter = new JsonResourceWriter(null);  }
-
-    @Activate
-    private void activate(){
-        counter = metricsService.counter("countRequests");
-        meter = metricsService.meter("durchflussgeschwindigkeit");
-    }
 
 
     /** True if our request wants the "tidy" pretty-printed format */
@@ -127,16 +115,12 @@ JsonQueryServlet extends SlingSafeMethodsServlet {
 
     @Activate
     private void activate(){
-        meter = metricsService.meter("data_flow_jsonQueryServlet");
+        meter = metricsService.meter("data_flow_jsonQueryServletTEST");
     }
 
     @Override
     protected void doGet(SlingHttpServletRequest req,
             SlingHttpServletResponse resp) throws IOException {
-<<<<<<< HEAD
-=======
-        counter.increment();
->>>>>>> 8d7a14cc768eb3227aba753f028ca56cdbf61ce1
         meter.mark();
         dumpResult(req, resp);
     }

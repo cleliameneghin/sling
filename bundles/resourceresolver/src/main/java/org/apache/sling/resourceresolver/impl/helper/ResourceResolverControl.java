@@ -35,6 +35,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
+import org.apache.felix.scr.annotations.Activate;
+import org.apache.felix.scr.annotations.Reference;
 
 import org.apache.commons.collections.iterators.IteratorChain;
 import org.apache.commons.lang.ArrayUtils;
@@ -57,6 +59,8 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.sling.commons.metrics.MetricsService;
+import org.apache.sling.commons.metrics.Meter;
 
 /**
  * This class takes a number of {@link AuthenticatedResourceProvider} objects and
@@ -68,7 +72,16 @@ import org.slf4j.LoggerFactory;
  */
 public class ResourceResolverControl {
 
+    @Reference
+    private MetricsService metricsService;
+    private Meter meter;
+
     private static final Logger logger = LoggerFactory.getLogger(ResourceResolverControl.class);
+
+    @Activate
+    private void activate (){
+        meter = metricsService.meter("ResourceResolverImpl-Meter");
+    }
 
     private static final String[] FORBIDDEN_ATTRIBUTES = new String[] {
             ResourceResolverFactory.PASSWORD,
@@ -222,6 +235,7 @@ public class ResourceResolverControl {
         if ( provider != null ) {
             final Resource resourceCandidate = provider.getResource(path, parent, parameters);
             if (resourceCandidate != null) {
+                meter.mark();
                 return resourceCandidate;
             }
         }

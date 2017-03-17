@@ -18,6 +18,7 @@
  */
 package org.apache.sling.servlets.post;
 
+
 import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
@@ -59,6 +60,7 @@ public class JSONResponse extends AbstractPostResponse {
             throw new JSONResponseException(e);
         }
     }
+
 
     public void onChange(String type, String... arguments)
             throws JSONResponseException {
@@ -124,7 +126,7 @@ public class JSONResponse extends AbstractPostResponse {
         response.setCharacterEncoding(RESPONSE_CHARSET);
 
         try {
-            json.write(response.getWriter());
+             json.write(response.getWriter());
         } catch (JSONException e) {
             IOException ioe = new IOException("Error creating JSON response");
             ioe.initCause(e);

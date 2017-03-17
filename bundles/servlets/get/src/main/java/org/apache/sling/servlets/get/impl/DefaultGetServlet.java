@@ -26,9 +26,11 @@ import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.SlingHttpServletRequest;
@@ -47,6 +49,7 @@ import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+
 /**
  * A SlingSafeMethodsServlet that renders the current Resource as simple HTML
  */
@@ -64,6 +67,7 @@ import org.slf4j.LoggerFactory;
     @Property(name="sling.servlet.methods", value={"GET", "HEAD"}, propertyPrivate=true)
 })
 public class DefaultGetServlet extends SlingSafeMethodsServlet {
+
 
     private static final long serialVersionUID = -5815904221043005085L;
 
@@ -127,7 +131,9 @@ public class DefaultGetServlet extends SlingSafeMethodsServlet {
 
     private boolean enableXml;
 
+
     protected void activate(ComponentContext ctx) {
+
         Dictionary<?, ?> props = ctx.getProperties();
         this.aliases = OsgiUtil.toStringArray(props.get(ALIAS_PROPERTY));
         this.index = OsgiUtil.toBoolean(props.get(INDEX_PROPERTY),
@@ -145,7 +151,8 @@ public class DefaultGetServlet extends SlingSafeMethodsServlet {
             DEFAULT_RENDERER_PROPERTY);
         this.jsonMaximumResults = OsgiUtil.toInteger(props.get(JSON_RENDERER_MAXIMUM_RESULTS_PROPERTY), 
             DEFAULT_JSON_RENDERER_MAXIMUM_RESULTS);
-    }
+
+            }
 
     protected void deactivate(ComponentContext ctx) {
         this.aliases = null;
