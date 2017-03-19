@@ -96,6 +96,7 @@ import org.slf4j.LoggerFactory;
     @Reference(name = "contentImporter", referenceInterface = ContentImporter.class, cardinality = ReferenceCardinality.OPTIONAL_UNARY, policy = ReferencePolicy.DYNAMIC) })
 public class SlingPostServlet extends SlingAllMethodsServlet {
 
+
     private static final long serialVersionUID = 1837674988291697074L;
 
     /**
@@ -399,6 +400,7 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
     @Activate
     protected void activate(final BundleContext bundleContext,
             final Map<String, Object> configuration) {
+
         // configure now
         this.configure(configuration);
 

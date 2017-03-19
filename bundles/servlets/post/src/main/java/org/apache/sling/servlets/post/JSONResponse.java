@@ -25,6 +25,8 @@ import org.apache.sling.commons.json.JSONObject;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
+
+
 /**
  * The <code>JSONResponse</code> is an {@link AbstractPostResponse} preparing
  * the response in JSON.
@@ -50,8 +52,10 @@ public class JSONResponse extends AbstractPostResponse {
 
     private Throwable error;
 
+
+
     public JSONResponse() throws JSONResponseException {
-        try {
+       try {
             json = new JSONObject();
             changes = new JSONArray();
             json.put(PROP_CHANGES, changes);
@@ -146,4 +150,6 @@ public class JSONResponse extends AbstractPostResponse {
             super("Error building JSON response", e);
         }
     }
+
+
 }

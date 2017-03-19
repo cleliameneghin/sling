@@ -49,6 +49,10 @@ import org.apache.sling.api.request.SlingRequestEvent;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.servlets.ServletResolver;
 import org.apache.sling.auth.core.AuthenticationSupport;
+import org.apache.sling.commons.metrics.Counter;
+import org.apache.sling.commons.metrics.Meter;
+import org.apache.sling.commons.metrics.MetricsService;
+import org.apache.sling.commons.metrics.Timer;
 import org.apache.sling.commons.mime.MimeTypeService;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.engine.SlingRequestProcessor;
@@ -117,6 +121,13 @@ public class SlingMainServlet extends GenericServlet {
 
     @Reference(cardinality = ReferenceCardinality.OPTIONAL_UNARY, policy = ReferencePolicy.DYNAMIC)
     private volatile AdapterManager adapterManager;
+
+    @Reference
+    private MetricsService metricsService;
+    private Meter meter;
+    private Timer timer;
+    private Timer.Context context;
+    private Counter counter;
 
     /** default log */
     private final Logger log = LoggerFactory.getLogger(SlingMainServlet.class);
@@ -190,6 +201,10 @@ public class SlingMainServlet extends GenericServlet {
     public void service(ServletRequest req, ServletResponse res)
             throws ServletException {
 
+        meter.mark();
+        context = timer.time();
+        counter.increment();
+
         if (req instanceof HttpServletRequest
             && res instanceof HttpServletResponse) {
 
@@ -252,6 +267,8 @@ public class SlingMainServlet extends GenericServlet {
             throw new ServletException(
                 "Apache Sling must be run in an HTTP servlet environment.");
         }
+
+        context.stop();
     }
 
     // ---------- Internal helper ----------------------------------------------
@@ -339,6 +356,10 @@ public class SlingMainServlet extends GenericServlet {
     @Activate
     protected void activate(final BundleContext bundleContext,
             final Map<String, Object> componentConfig) {
+
+        meter = metricsService.meter("SlingMainServlet-Requests-per-second");
+        timer = metricsService.timer("SlingMainServlet-Duration-of-request");
+        counter= metricsService.counter("fucking-counter");
 
         final String[] props = PropertiesUtil.toStringArray(componentConfig.get(PROP_ADDITIONAL_RESPONSE_HEADERS));
 
