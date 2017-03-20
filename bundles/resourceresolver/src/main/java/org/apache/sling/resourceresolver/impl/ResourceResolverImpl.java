@@ -90,12 +90,11 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
     /** Resource resolver context. */
     private final ResourceResolverContext context;
 
-    private volatile Exception closedResolverException;
-
-    public ResourceResolverImpl(final CommonResourceResolverFactoryImpl factory, final boolean isAdmin, final Map<String, Object> authenticationInfo) throws LoginException {
-
     private MetricsService metricsService;
     private Counter countNonExistingSource;
+
+    private volatile Exception closedResolverException;
+
 
     public ResourceResolverImpl(final CommonResourceResolverFactoryImpl factory, final boolean isAdmin, final Map<String, Object> authenticationInfo, MetricsService metricsService) throws LoginException {
 
@@ -107,16 +106,24 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
             countNonExistingSource = metricsService.counter("ResourceResolverImpl-Non-Existing-Source-Found");
 
         }
-
-
     }
 
-    ResourceResolverImpl(final CommonResourceResolverFactoryImpl factory, final boolean isAdmin, final Map<String, Object> authenticationInfo, final ResourceProviderStorageProvider resourceProviderTracker) throws LoginException {
-        this.factory = factory;
-        this.context = new ResourceResolverContext(this, factory.getResourceAccessSecurityTracker());
-        this.control = createControl(resourceProviderTracker, authenticationInfo, isAdmin);
-        this.factory.register(this, control);
-    }
+
+
+        ResourceResolverImpl(final CommonResourceResolverFactoryImpl factory, final boolean isAdmin, final Map<String, Object> authenticationInfo, final ResourceProviderStorageProvider resourceProviderTracker) throws LoginException {
+            this.factory = factory;
+            this.context = new ResourceResolverContext(this, factory.getResourceAccessSecurityTracker());
+            this.control = createControl(resourceProviderTracker, authenticationInfo, isAdmin);
+            this.factory.register(this, control);
+/*###################do I even need this here?#######################*/
+            metricsService = this.metricsService;
+            if(metricsService == null){
+                countNonExistingSource = null;
+            } else {
+                countNonExistingSource = metricsService.counter("ResourceResolverImpl-Non-Existing-Source-Found");
+
+            }
+        }
 
 
 
