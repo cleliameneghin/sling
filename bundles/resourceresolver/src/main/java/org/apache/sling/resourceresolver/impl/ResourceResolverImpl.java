@@ -34,6 +34,7 @@ import javax.annotation.CheckForNull;
 import javax.jcr.Session;
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.felix.scr.annotations.Reference;
 import org.apache.sling.adapter.annotations.Adaptable;
 import org.apache.sling.adapter.annotations.Adapter;
 import org.apache.sling.api.SlingException;
@@ -47,6 +48,8 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ResourceWrapper;
+import org.apache.sling.commons.metrics.Counter;
+import org.apache.sling.commons.metrics.MetricsService;
 import org.apache.sling.resourceresolver.impl.helper.RedirectResource;
 import org.apache.sling.resourceresolver.impl.helper.ResourceIteratorDecorator;
 import org.apache.sling.resourceresolver.impl.helper.ResourcePathIterator;
@@ -90,8 +93,20 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
 
     private volatile Exception closedResolverException;
 
-    public ResourceResolverImpl(final CommonResourceResolverFactoryImpl factory, final boolean isAdmin, final Map<String, Object> authenticationInfo) throws LoginException {
+    private MetricsService metricsService;
+    private Counter countNonExistingSource;
+
+    public ResourceResolverImpl(final CommonResourceResolverFactoryImpl factory, final boolean isAdmin, final Map<String, Object> authenticationInfo, MetricsService metricsService) throws LoginException {
         this(factory, isAdmin, authenticationInfo, factory.getResourceProviderTracker());
+        metricsService = this.metricsService;
+        if(metricsService == null){
+            countNonExistingSource = null;
+        } else {
+            countNonExistingSource = metricsService.counter("ResourceResolverImpl-Non-Existing-Source-Found");
+
+        }
+
+
     }
 
     ResourceResolverImpl(final CommonResourceResolverFactoryImpl factory, final boolean isAdmin, final Map<String, Object> authenticationInfo, final ResourceProviderStorageProvider resourceProviderTracker) throws LoginException {
@@ -367,6 +382,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
 
         // if no resource has been found, use a NonExistingResource
         if (res == null) {
+            countNonExistingSource.increment();
             final ParsedParameters parsedPath = new ParsedParameters(realPathList[0]);
             final String resourcePath = ensureAbsPath(parsedPath.getRawPath());
             logger.debug("resolve: Path {} does not resolve, returning NonExistingResource at {}", absPath, resourcePath);
