@@ -39,7 +39,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 /**
- * Test events when changing filesystem content (FileVault XML).
+ * Test events when changing file system content (FileVault XML).
  */
 public class FileVaultFileMonitorTest {
     
@@ -65,12 +65,14 @@ public class FileVaultFileMonitorTest {
                 
                 // mount temp. directory
                 context.registerInjectActivateService(new FsResourceProvider(),
-                        "provider.file", tempDir.getPath(),
+                        "provider.file", tempDir.getPath() + "/jcr_root",
+                        "provider.filevault.filterxml.path", tempDir.getPath() + "/META-INF/vault/filter.xml",
                         "provider.root", "/content/dam/talk.png",
                         "provider.checkinterval", CHECK_INTERVAL,
                         "provider.fs.mode", FsMode.FILEVAULT_XML.name());
                 context.registerInjectActivateService(new FsResourceProvider(),
-                        "provider.file", tempDir.getPath(),
+                        "provider.file", tempDir.getPath() + "/jcr_root",
+                        "provider.filevault.filterxml.path", tempDir.getPath() + "/META-INF/vault/filter.xml",
                         "provider.root", "/content/samples",
                         "provider.checkinterval", CHECK_INTERVAL,
                         "provider.fs.mode", FsMode.FILEVAULT_XML.name());

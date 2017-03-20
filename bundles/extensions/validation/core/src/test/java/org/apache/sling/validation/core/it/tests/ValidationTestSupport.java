@@ -25,10 +25,8 @@ import org.apache.sling.auth.core.AuthenticationSupport;
 import org.apache.sling.engine.SlingRequestProcessor;
 import org.apache.sling.testing.paxexam.TestSupport;
 import org.apache.sling.validation.ValidationService;
-import org.apache.sling.validation.testservices.ResourcePresence;
 import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.Option;
-import org.ops4j.pax.exam.util.Filter;
 import org.ops4j.pax.exam.util.PathUtils;
 
 import static org.apache.sling.testing.paxexam.SlingOptions.slingExtensionI18n;
@@ -54,10 +52,6 @@ public class ValidationTestSupport extends TestSupport {
     @Inject
     protected ValidationService validationService;
 
-    @Inject
-    @Filter(value = "(path=/apps/sling/validation/models/model1)", timeout = 10000)
-    protected ResourcePresence resourcePresence;
-
     @Configuration
     public Option[] configuration() {
         return new Option[]{
@@ -69,8 +63,8 @@ public class ValidationTestSupport extends TestSupport {
             mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.validation.test-services").versionAsInProject(),
             factoryConfiguration("org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended")
                 .put("user.mapping", new String[]{
-                    "org.apache.sling.validation.core=sling-readall",
-                    "org.apache.sling.validation.test-services=sling-readall"
+                    "org.apache.sling.validation.core=sling-validation",
+                    "org.apache.sling.validation.test-services=sling-validation"
                 })
                 .asOption(),
             // testing

@@ -182,7 +182,6 @@
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.commons.metrics</artifactId>
             <version>1.2.0</version>
-            <scope>provided</scope>
         </dependency>
     </dependencies>
 

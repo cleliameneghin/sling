@@ -18,13 +18,14 @@
  */
 package org.apache.sling.fsprovider.internal;
 
+import static org.apache.jackrabbit.vault.util.Constants.DOT_CONTENT_XML;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import static org.apache.jackrabbit.vault.util.Constants.DOT_CONTENT_XML;
 
 import org.apache.commons.collections.IteratorUtils;
 import org.apache.commons.collections.Predicate;
@@ -79,14 +80,10 @@ public final class FsResourceProvider extends ResourceProvider<Object> {
     public static final String RESOURCE_METADATA_FILE_DIRECTORY = ":org.apache.sling.fsprovider.file.directory";
     
     @ObjectClassDefinition(name = "Apache Sling File System Resource Provider",
-            description = "Configure an instance of the filesystem " +
-                          "resource provider in terms of provider root and filesystem location")
+            description = "Configure an instance of the file system " +
+                          "resource provider in terms of provider root and file system location")
     public @interface Config {
-        /**
-         * The name of the configuration property providing file system path of
-         * files and folders mapped into the resource tree (value is
-         * "provider.file").
-         */
+
         @AttributeDefinition(name = "File System Root",
                 description = "File system directory mapped to the virtual " +
                         "resource tree. This property must not be an empty string. If the path is " +
@@ -95,37 +92,38 @@ public final class FsResourceProvider extends ResourceProvider<Object> {
                         "file or folder, an empty folder is created.")
         String provider_file();
 
-        /**
-         * The name of the configuration property providing the check interval
-         * for file changes (value is "provider.checkinterval").
-         */
+        @AttributeDefinition(name = "Provider Root",
+                description = "Location in the virtual resource tree where the " +
+                "file system resources are mapped in. This property must not be an empty string.")
+        String provider_root();
+        
+        @AttributeDefinition(name = "File system layout",
+                description = "File system layout mode for files, folders and content.",
+                options={
+                        @Option(value="FILES_FOLDERS", label="FILES_FOLDERS - "
+                                + "Support only files and folders (classic mode)"),
+                        @Option(value="INITIAL_CONTENT", label="INITIAL_CONTENT - "
+                                + "Sling-Initial-Content file system layout, supports file and folders ant content files in JSON and jcr.xml format"),
+                        @Option(value="FILEVAULT_XML", label="FILEVAULT_XML - "
+                                + "FileVault XML format (expanded content package)"),
+                })
+        FsMode provider_fs_mode() default FsMode.FILES_FOLDERS;
+        
+        @AttributeDefinition(name = "Init. Content Options",
+                description = "Import options for Sling-Initial-Content file system layout. Supported options: overwrite, ignoreImportProviders.")
+        String provider_initial_content_import_options();
+        
+        @AttributeDefinition(name = "FileVault Filter",
+                description = "Path to META-INF/vault/filter.xml when using FileVault XML file system layout.")
+        String provider_filevault_filterxml_path();
+        
+
         @AttributeDefinition(name = "Check Interval",
                              description = "If the interval has a value higher than 100, the provider will " +
              "check the file system for changes periodically. This interval defines the period in milliseconds " +
              "(the default is 1000). If a change is detected, resource events are sent through the event admin.")
         long provider_checkinterval() default 1000;
 
-        @AttributeDefinition(name = "Provider Root",
-                description = "Location in the virtual resource tree where the " +
-                "filesystem resources are mapped in. This property must not be an empty string.")
-        String provider_root();
-        
-        @AttributeDefinition(name = "Filesystem layout",
-                description = "Filesystem layout mode for files, folders and content.",
-                options={
-                        @Option(value="INITIAL_CONTENT", label="INITIAL_CONTENT - "
-                                + "Sling-Initial-Content filesystem layout, with full support for JSON and jcr.xml content files."),
-                        @Option(value="INITIAL_CONTENT_FILES_FOLDERS", label="INITIAL_CONTENT_FILES_FOLDERS - "
-                                + "Sling-Initial-Content filesystem layout, support only files and folders (classic mode)."),
-                        @Option(value="FILEVAULT_XML", label="FILEVAULT_XML - "
-                                + "FileVault XML format (expanded content package)."),
-                })
-        FsMode provider_fs_mode() default FsMode.INITIAL_CONTENT;
-        
-        @AttributeDefinition(name = "Init. Content Options",
-                description = "Import options for Sling-Initial-Content filesystem layout. Supported options: overwrite, ignoreImportProviders.")
-        String provider_initial_content_import_options();
-        
         @AttributeDefinition(name = "Cache Size",
                 description = "Max. number of content files cached in memory.")
         int provider_cache_size() default 10000;
@@ -133,7 +131,7 @@ public final class FsResourceProvider extends ResourceProvider<Object> {
         /**
          * Internal Name hint for web console.
          */
-        String webconsole_configurationFactory_nameHint() default "Root path: {" + ResourceProvider.PROPERTY_ROOT + "}";
+        String webconsole_configurationFactory_nameHint() default "{provider.fs.mode}: {" + ResourceProvider.PROPERTY_ROOT + "}";
     }
 
     // The location in the resource tree where the resources are mapped
@@ -145,13 +143,13 @@ public final class FsResourceProvider extends ResourceProvider<Object> {
     // The monitor to detect file changes.
     private FileMonitor monitor;
     
-    // maps filesystem to resources
+    // maps file system to resources
     private FsMode fsMode;
     private FsResourceMapper fileMapper;
     private FsResourceMapper contentFileMapper;
     private FileVaultResourceMapper fileVaultMapper;
     
-    // if true resources from filesystem are only "overlayed" to JCR resources, serving JCR as fallback within the same path
+    // if true resources from file system are only "overlayed" to JCR resources, serving JCR as fallback within the same path
     private boolean overlayParentResourceProvider;
     
     // cache for parsed content files
@@ -311,12 +309,16 @@ public final class FsResourceProvider extends ResourceProvider<Object> {
         this.overlayParentResourceProvider = false;
         
         InitialContentImportOptions options = new InitialContentImportOptions(config.provider_initial_content_import_options());
+        File filterXmlFile = null;
                 
         List<String> contentFileSuffixes = new ArrayList<>();
         if (fsMode == FsMode.FILEVAULT_XML) {
             contentFileSuffixes.add("/" + DOT_CONTENT_XML);
+            if (StringUtils.isNotBlank(config.provider_filevault_filterxml_path())) {
+                filterXmlFile = new File(config.provider_filevault_filterxml_path());
+            }
         }
-        else if (fsMode == FsMode.INITIAL_CONTENT_FILES_FOLDERS) {
+        else if (fsMode == FsMode.FILES_FOLDERS) {
             overlayParentResourceProvider = true;
         }
         else if (fsMode == FsMode.INITIAL_CONTENT) {
@@ -332,7 +334,7 @@ public final class FsResourceProvider extends ResourceProvider<Object> {
         
         this.contentFileCache = new ContentFileCache(config.provider_cache_size());
         if (fsMode == FsMode.FILEVAULT_XML) {
-            this.fileVaultMapper = new FileVaultResourceMapper(this.providerFile, this.contentFileCache);
+            this.fileVaultMapper = new FileVaultResourceMapper(this.providerFile, filterXmlFile, this.contentFileCache);
         }
         else {
             this.fileMapper = new FileResourceMapper(this.providerRoot, this.providerFile, contentFileExtensions);

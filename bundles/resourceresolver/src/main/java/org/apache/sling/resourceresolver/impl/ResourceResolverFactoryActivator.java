@@ -36,6 +36,7 @@ import org.apache.sling.api.resource.ResourceDecorator;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.path.Path;
 import org.apache.sling.api.resource.runtime.RuntimeService;
+import org.apache.sling.commons.metrics.MetricsService;
 import org.apache.sling.resourceresolver.impl.helper.ResourceDecoratorTracker;
 import org.apache.sling.resourceresolver.impl.mapping.Mapping;
 import org.apache.sling.resourceresolver.impl.observation.ResourceChangeListenerWhiteboard;
@@ -113,6 +114,9 @@ public class ResourceResolverFactoryActivator {
 
     @Reference
     ResourceAccessSecurityTracker resourceAccessSecurityTracker;
+
+    @Reference
+    MetricsService metricsService;
 
     volatile ResourceProviderTracker resourceProviderTracker;
 
@@ -335,15 +339,7 @@ public class ResourceResolverFactoryActivator {
 
         boolean hasLegacyRequiredProvider = false;
         if ( requiredResourceProvidersLegacy != null ) {
-            for(final String name : requiredResourceProvidersLegacy) {
-            	if ( name.equals(ResourceResolverFactoryConfig.LEGACY_REQUIRED_PROVIDER_PID)) {
-                	hasLegacyRequiredProvider = true;
-                	break;
-            	}
-            }
-            if ( hasLegacyRequiredProvider ) {
-            	requiredResourceProvidersLegacy.remove(ResourceResolverFactoryConfig.LEGACY_REQUIRED_PROVIDER_PID);
-            }
+            hasLegacyRequiredProvider = requiredResourceProvidersLegacy.remove(ResourceResolverFactoryConfig.LEGACY_REQUIRED_PROVIDER_PID);
             if ( !requiredResourceProvidersLegacy.isEmpty() ) {
                 logger.error("ResourceResolverFactory is using deprecated required providers configuration (resource.resolver.required.providers" +
                         "). Please change to use the property resource.resolver.required.providernames for values: " + requiredResourceProvidersLegacy);
@@ -488,7 +484,7 @@ public class ResourceResolverFactoryActivator {
             serviceProps.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
             serviceProps.put(Constants.SERVICE_DESCRIPTION, "Apache Sling Resource Resolver Factory");
 
-            local.commonFactory = new CommonResourceResolverFactoryImpl(this);
+            local.commonFactory = new CommonResourceResolverFactoryImpl(this, metricsService);
             local.commonFactory.activate(localContext);
             local.factoryRegistration = localContext.registerService(
                 ResourceResolverFactory.class, new ServiceFactory<ResourceResolverFactory>() {

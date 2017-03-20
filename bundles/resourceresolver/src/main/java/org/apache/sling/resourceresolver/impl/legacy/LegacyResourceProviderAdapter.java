@@ -52,6 +52,7 @@ public class LegacyResourceProviderAdapter extends ResourceProvider<Object> impl
 
     private final boolean ownsRoot;
 
+
     public LegacyResourceProviderAdapter(org.apache.sling.api.resource.ResourceProvider rp, String[] languages, boolean ownsRoot) {
         this.rp = rp;
         this.languages = languages;
@@ -62,7 +63,7 @@ public class LegacyResourceProviderAdapter extends ResourceProvider<Object> impl
     @Override
     public Resource getResource(ResolveContext<Object> ctx, String path, ResourceContext resourceContext, Resource parent) {
         Resource resourceCandidate;
-        if (rp instanceof ParametrizableResourceProvider) {
+         if (rp instanceof ParametrizableResourceProvider) {
             resourceCandidate = ((ParametrizableResourceProvider) rp).getResource(ctx.getResourceResolver(), path,
                     resourceContext.getResolveParameters());
         } else {
@@ -254,4 +255,6 @@ public class LegacyResourceProviderAdapter extends ResourceProvider<Object> impl
     public String toString() {
         return "[" + getClass().getSimpleName() + ": " + rp.toString() + " ]";
     }
+
+
 }

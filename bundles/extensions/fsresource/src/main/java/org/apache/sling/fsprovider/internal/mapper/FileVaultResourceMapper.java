@@ -19,9 +19,6 @@
 package org.apache.sling.fsprovider.internal.mapper;
 
 import static org.apache.jackrabbit.vault.util.Constants.DOT_CONTENT_XML;
-import static org.apache.jackrabbit.vault.util.Constants.FILTER_XML;
-import static org.apache.jackrabbit.vault.util.Constants.META_DIR;
-import static org.apache.jackrabbit.vault.util.Constants.ROOT_DIR;
 
 import java.io.File;
 import java.io.IOException;
@@ -41,6 +38,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.fsprovider.internal.FsResourceMapper;
+import org.apache.sling.fsprovider.internal.parser.ContentElement;
 import org.apache.sling.fsprovider.internal.parser.ContentFileCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,13 +49,15 @@ public final class FileVaultResourceMapper implements FsResourceMapper {
     private static final String DOT_DIR_SUFFIX = "/.dir";
 
     private final File providerFile;
+    private final File filterXmlFile;
     private final ContentFileCache contentFileCache;
     private final WorkspaceFilter workspaceFilter;
     
     private static final Logger log = LoggerFactory.getLogger(FileVaultResourceMapper.class);
     
-    public FileVaultResourceMapper(File providerFile, ContentFileCache contentFileCache) {
+    public FileVaultResourceMapper(File providerFile, File filterXmlFile, ContentFileCache contentFileCache) {
         this.providerFile = providerFile;
+        this.filterXmlFile = filterXmlFile;
         this.contentFileCache = contentFileCache;
         this.workspaceFilter = getWorkspaceFilter();
     }
@@ -95,9 +95,9 @@ public final class FileVaultResourceMapper implements FsResourceMapper {
         // get children from content resource of parent
         ContentFile parentContentFile = getContentFile(parentPath, null);
         if (parentContentFile != null) {
-            Iterator<Map.Entry<String,Map<String,Object>>> childMaps = parentContentFile.getChildren();
+            Iterator<Map.Entry<String,ContentElement>> childMaps = parentContentFile.getChildren();
             while (childMaps.hasNext()) {
-                Map.Entry<String,Map<String,Object>> entry = childMaps.next();
+                Map.Entry<String,ContentElement> entry = childMaps.next();
                 String childPath = parentPath + "/" + entry.getKey();
                 if (pathMatches(childPath)) {
                     childPaths.add(childPath);
@@ -105,7 +105,7 @@ public final class FileVaultResourceMapper implements FsResourceMapper {
             }
         }
         
-        // additional check for children in filesystem
+        // additional check for children in file system
         File parentFile = getFile(parentPath);
         if (parentFile != null && parentFile.isDirectory()) {
             for (File childFile : parentFile.listFiles()) {
@@ -134,18 +134,17 @@ public final class FileVaultResourceMapper implements FsResourceMapper {
      * @return Workspace filter or null if none found.
      */
     private WorkspaceFilter getWorkspaceFilter() {
-        File filter = new File(providerFile, META_DIR + "/" + FILTER_XML);
-        if (filter.exists()) {
+        if (filterXmlFile != null && filterXmlFile.exists()) {
             try {
                 DefaultWorkspaceFilter workspaceFilter = new DefaultWorkspaceFilter();
-                workspaceFilter.load(filter);
+                workspaceFilter.load(filterXmlFile);
                 return workspaceFilter;
             } catch (IOException | ConfigurationException ex) {
-                log.error("Unable to parse workspace filter: " + filter.getPath(), ex);
+                log.error("Unable to parse workspace filter: " + filterXmlFile.getPath(), ex);
             }
         }
         else {
-            log.warn("Workspace filter not found: " + filter.getPath());
+            log.debug("Workspace filter not found: " + filterXmlFile.getPath());
         }
         return null;
     }
@@ -161,7 +160,7 @@ public final class FileVaultResourceMapper implements FsResourceMapper {
             return false;
         }
         if (workspaceFilter == null) {
-            return false;
+            return true;
         }
         else {
             return workspaceFilter.contains(path);
@@ -172,7 +171,7 @@ public final class FileVaultResourceMapper implements FsResourceMapper {
         if (StringUtils.endsWith(path, DOT_CONTENT_XML_SUFFIX)) {
             return null;
         }
-        File file = new File(providerFile, ROOT_DIR + PlatformNameFormat.getPlatformPath(path));
+        File file = new File(providerFile, "." + PlatformNameFormat.getPlatformPath(path));
         if (file.exists()) {
             return file;
         }
@@ -180,7 +179,7 @@ public final class FileVaultResourceMapper implements FsResourceMapper {
     }
     
     private ContentFile getContentFile(String path, String subPath) {
-        File file = new File(providerFile, ROOT_DIR + PlatformNameFormat.getPlatformPath(path) + DOT_CONTENT_XML_SUFFIX);
+        File file = new File(providerFile, "." + PlatformNameFormat.getPlatformPath(path) + DOT_CONTENT_XML_SUFFIX);
         if (file.exists()) {
             ContentFile contentFile = new ContentFile(file, path, subPath, contentFileCache);
             if (contentFile.hasContent()) {

@@ -22,13 +22,15 @@ import static org.apache.jackrabbit.vault.util.Constants.DOT_CONTENT_XML;
 import static org.apache.sling.fsprovider.internal.parser.ContentFileTypes.JCR_XML_SUFFIX;
 import static org.apache.sling.fsprovider.internal.parser.ContentFileTypes.JSON_SUFFIX;
 
+import java.io.BufferedInputStream;
 import java.io.File;
-import java.util.Map;
+import java.io.FileInputStream;
+import java.io.IOException;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.sling.fscontentparser.ContentFileParser;
-import org.apache.sling.fscontentparser.ContentFileParserFactory;
-import org.apache.sling.fscontentparser.ContentFileType;
+import org.apache.sling.jcr.contentparser.ContentParser;
+import org.apache.sling.jcr.contentparser.ContentParserFactory;
+import org.apache.sling.jcr.contentparser.ContentType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,19 +41,19 @@ class ContentFileParserUtil {
     
     private static final Logger log = LoggerFactory.getLogger(ContentFileParserUtil.class);
     
-    private static final ContentFileParser JSON_PARSER;
+    private static final ContentParser JSON_PARSER;
     static {
         // workaround for JsonProvider classloader issue until https://issues.apache.org/jira/browse/GERONIMO-6560 is fixed
         ClassLoader oldClassLoader = Thread.currentThread().getContextClassLoader();
         try {
             Thread.currentThread().setContextClassLoader(ContentFileParserUtil.class.getClassLoader());
-            JSON_PARSER = ContentFileParserFactory.create(ContentFileType.JSON);
+            JSON_PARSER = ContentParserFactory.create(ContentType.JSON);
         }
         finally {
             Thread.currentThread().setContextClassLoader(oldClassLoader);
         }
     }
-    private static final ContentFileParser JCR_XML_PARSER = ContentFileParserFactory.create(ContentFileType.JCR_XML);
+    private static final ContentParser JCR_XML_PARSER = ContentParserFactory.create(ContentType.JCR_XML);
     
     private ContentFileParserUtil() {
         // static methods only
@@ -62,22 +64,31 @@ class ContentFileParserUtil {
      * @param file File. Type is detected automatically.
      * @return Content or null if content could not be parsed.
      */
-    public static Map<String,Object> parse(File file) {
+    public static ContentElement parse(File file) {
         if (!file.exists()) {
             return null;
         }
         try {
             if (StringUtils.endsWith(file.getName(), JSON_SUFFIX)) {
-                return JSON_PARSER.parse(file);
+                return parse(JSON_PARSER, file);
             }
             else if (StringUtils.equals(file.getName(), DOT_CONTENT_XML) || StringUtils.endsWith(file.getName(), JCR_XML_SUFFIX)) {
-                return JCR_XML_PARSER.parse(file);
+                return parse(JCR_XML_PARSER, file);
             }
         }
         catch (Throwable ex) {
             log.warn("Error parsing content from " + file.getPath(), ex);
         }
         return null;
+    }
+    
+    private static ContentElement parse(ContentParser contentParser, File file) throws IOException {
+        try (FileInputStream fis = new FileInputStream(file);
+                BufferedInputStream bis = new BufferedInputStream(fis)) {
+            ContentElementHandler handler = new ContentElementHandler();
+            contentParser.parse(handler, bis);
+            return handler.getRoot();
+        }
     }
 
 }

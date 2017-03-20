@@ -18,8 +18,6 @@
  */
 package org.apache.sling.fsprovider.internal;
 
-import static org.apache.jackrabbit.vault.util.Constants.ROOT_DIR;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,6 +30,7 @@ import org.apache.jackrabbit.vault.util.PlatformNameFormat;
 import org.apache.sling.api.resource.observation.ResourceChange;
 import org.apache.sling.api.resource.observation.ResourceChange.ChangeType;
 import org.apache.sling.fsprovider.internal.mapper.ContentFile;
+import org.apache.sling.fsprovider.internal.parser.ContentElement;
 import org.apache.sling.fsprovider.internal.parser.ContentFileCache;
 import org.apache.sling.spi.resource.provider.ObservationReporter;
 import org.apache.sling.spi.resource.provider.ObserverConfiguration;
@@ -71,7 +70,7 @@ public final class FileMonitor extends TimerTask {
         
         File rootFile = this.provider.getRootFile();
         if (fsMode == FsMode.FILEVAULT_XML) {
-            rootFile = new File(this.provider.getRootFile(), ROOT_DIR + PlatformNameFormat.getPlatformPath(this.provider.getProviderRoot()));
+            rootFile = new File(this.provider.getRootFile(), "." + PlatformNameFormat.getPlatformPath(this.provider.getProviderRoot()));
         }
         this.root = new Monitorable(this.provider.getProviderRoot(), rootFile, null);
         
@@ -166,7 +165,7 @@ public final class FileMonitor extends TimerTask {
                 // removed file and update status
                 sendEvents(monitorable, ChangeType.REMOVED, reporter);
                 monitorable.status = NonExistingStatus.SINGLETON;
-                contentFileCache.remove(monitorable.path);
+                contentFileCache.remove(transformPath(monitorable.path));
             } else {
                 // check for changes
                 final FileStatus fs = (FileStatus)monitorable.status;
@@ -176,7 +175,7 @@ public final class FileMonitor extends TimerTask {
                     // changed
                     sendEvents(monitorable, ChangeType.CHANGED, reporter);
                     changed = true;
-                    contentFileCache.remove(monitorable.path);
+                    contentFileCache.remove(transformPath(monitorable.path));
                 }
                 if ( fs instanceof DirStatus ) {
                     // directory
@@ -260,20 +259,19 @@ public final class FileMonitor extends TimerTask {
         }
     }
     
-    @SuppressWarnings("unchecked")
     private List<ResourceChange> collectResourceChanges(final Monitorable monitorable, final ChangeType changeType) {
         List<ResourceChange> changes = new ArrayList<>();
         if (monitorable.status instanceof ContentFileStatus) {
             ContentFile contentFile = ((ContentFileStatus)monitorable.status).contentFile;
             if (changeType == ChangeType.CHANGED) {
-                Map<String,Object> content = (Map<String,Object>)contentFile.getContent();
+                ContentElement content = contentFile.getContent();
                 // we cannot easily report the diff of resource changes between two content files
                 // so we simulate a removal of the toplevel node and then add all nodes contained in the current content file again.
                 changes.add(buildContentResourceChange(ChangeType.REMOVED,  transformPath(monitorable.path)));
                 addContentResourceChanges(changes, ChangeType.ADDED, content, transformPath(monitorable.path));
             }
             else {
-                addContentResourceChanges(changes, changeType, (Map<String,Object>)contentFile.getContent(), transformPath(monitorable.path));
+                addContentResourceChanges(changes, changeType, contentFile.getContent(), transformPath(monitorable.path));
             }
         }
         else {
@@ -281,16 +279,13 @@ public final class FileMonitor extends TimerTask {
         }
         return changes;
     }
-    @SuppressWarnings("unchecked")
     private void addContentResourceChanges(final List<ResourceChange> changes, final ChangeType changeType,
-            final Map<String,Object> content, final String path) {
+            final ContentElement content, final String path) {
         changes.add(buildContentResourceChange(changeType,  path));
         if (content != null) {
-            for (Map.Entry<String,Object> entry : content.entrySet()) {
-                if (entry.getValue() instanceof Map) {
-                    String childPath = path + "/" + entry.getKey();
-                    addContentResourceChanges(changes, changeType, (Map<String,Object>)entry.getValue(), childPath);
-                }
+            for (Map.Entry<String,ContentElement> entry : content.getChildren().entrySet()) {
+                String childPath = path + "/" + entry.getKey();
+                addContentResourceChanges(changes, changeType, entry.getValue(), childPath);
             }
         }
     }

@@ -38,8 +38,8 @@ import org.apache.commons.lang3.CharEncoding;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.observation.ResourceChange;
-import org.apache.sling.api.resource.observation.ResourceChangeListener;
 import org.apache.sling.api.resource.observation.ResourceChange.ChangeType;
+import org.apache.sling.api.resource.observation.ResourceChangeListener;
 import org.apache.sling.hamcrest.ResourceMatchers;
 import org.apache.sling.testing.mock.osgi.MapUtil;
 import org.apache.sling.testing.mock.osgi.context.AbstractContextPlugin;
@@ -58,7 +58,7 @@ class TestUtils {
             config.put("provider.file", "src/test/resources/fs-test");
             config.put("provider.root", "/fs-test");
             config.put("provider.checkinterval", 0);
-            config.put("provider.fs.mode", FsMode.INITIAL_CONTENT_FILES_FOLDERS.name());
+            config.put("provider.fs.mode", FsMode.FILES_FOLDERS.name());
             config.putAll(props);
             context.registerInjectActivateService(new FsResourceProvider(), config);
         }

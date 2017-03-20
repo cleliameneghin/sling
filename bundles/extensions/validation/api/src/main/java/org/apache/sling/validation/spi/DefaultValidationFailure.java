@@ -26,12 +26,14 @@ import java.util.ResourceBundle;
 import javax.annotation.Nonnull;
 
 import org.apache.sling.validation.ValidationFailure;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * Wraps a message key (being looked up in a {@link ResourceBundle}), messageArguments (being used with {@link MessageFormat#format(String, Object...)}
  * and the location where the validation failure occurred.
  */
-public class DefaultValidationFailure implements ValidationFailure, Serializable {
+@ProviderType
+public final class DefaultValidationFailure implements ValidationFailure, Serializable {
 
     /**
      * 
@@ -59,9 +61,9 @@ public class DefaultValidationFailure implements ValidationFailure, Serializable
 
     /**
      * Constructor of a validation failure.
-     * @param location the location where the validation error occured
-     * @param severity the severity of this failure (may be {@code null}), which leads to setting it to the {@link #DEFAULT_SEVERITY}
-     * @param defaultResourceBundle the default resourceBundle which is used to resolve the {@link messageKey} in {@link #getMessage(ResourceBundle)}
+     * @param location the location where the validation error occurred
+     * @param severity the severity of this failure (may be {@code null} which leads to using the validator's default severity)
+     * @param defaultResourceBundle the default resourceBundle which is used to resolve the {@code messageKey} in {@link #getMessage(ResourceBundle)}
      *  if {@code null} is provided as parameter.
      * @param messageKey the key to look up in the resource bundle
      * @param messageArguments the arguments to be used with the looked up value from the resource bundle (given in {@link #getMessage(ResourceBundle)}
@@ -74,7 +76,6 @@ public class DefaultValidationFailure implements ValidationFailure, Serializable
         this.defaultResourceBundle = defaultResourceBundle;
     }
 
-    @SuppressWarnings({ "null", "unused" })
     @Override
     public @Nonnull String getMessage(ResourceBundle resourceBundle) {
         if (resourceBundle == null) {
