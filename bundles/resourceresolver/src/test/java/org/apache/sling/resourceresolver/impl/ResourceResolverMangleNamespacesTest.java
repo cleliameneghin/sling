@@ -31,6 +31,7 @@ import javax.jcr.Session;
 import org.apache.commons.collections.IteratorUtils;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.commons.metrics.MetricsService;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderStorage;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderStorageProvider;
 import org.apache.sling.spi.resource.provider.ResolveContext;
@@ -50,6 +51,8 @@ public class ResourceResolverMangleNamespacesTest {
     private Session mockedSession;
 
     private Session activeSession;
+
+    private MetricsService metricsService = null;
 
     public static final String NS_PREFIX = "testNS";
     public static final String NS_URL = "http://example.com/namespaces/testNS";
@@ -94,7 +97,7 @@ public class ResourceResolverMangleNamespacesTest {
             }
         };
 
-        final CommonResourceResolverFactoryImpl fac = new CommonResourceResolverFactoryImpl(act);
+        final CommonResourceResolverFactoryImpl fac = new CommonResourceResolverFactoryImpl(act,metricsService);
 
         rr = new ResourceResolverImpl(fac, false, null, new ResourceProviderStorageProvider() {
             

@@ -35,6 +35,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.SyntheticResource;
+import org.apache.sling.commons.metrics.MetricsService;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderHandler;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderStorage;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderStorageProvider;
@@ -52,6 +53,7 @@ public class ResourceProviderEntryTest {
     private List<ResourceProviderHandler> providers = new ArrayList<ResourceProviderHandler>();
 
     private ResourceResolver providersBasedResolver;
+    private MetricsService metricsService = null;
 
     private ResourceResolver mockedRootResolver;
 
@@ -245,7 +247,7 @@ public class ResourceProviderEntryTest {
         if (providersBasedResolver == null) {
             final ResourceResolverFactoryActivator activator = new ResourceResolverFactoryActivator();
             activator.resourceAccessSecurityTracker = new ResourceAccessSecurityTracker();
-            providersBasedResolver = new ResourceResolverImpl(new CommonResourceResolverFactoryImpl(activator), false, null,
+            providersBasedResolver = new ResourceResolverImpl(new CommonResourceResolverFactoryImpl(activator, metricsService), false, null,
                     new ResourceProviderStorageProvider() {
 
                         @Override

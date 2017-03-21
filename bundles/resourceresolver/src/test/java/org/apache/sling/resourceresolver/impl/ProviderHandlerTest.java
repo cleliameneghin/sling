@@ -31,6 +31,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
+import org.apache.sling.commons.metrics.MetricsService;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderHandler;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderStorage;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderStorageProvider;
@@ -43,6 +44,8 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 public class ProviderHandlerTest {
+
+    private MetricsService metricsService = null;
 
     @SuppressWarnings("unchecked")
     @Test public void testServletRegistrationAndSyntheticResources() throws LoginException {
@@ -60,7 +63,7 @@ public class ProviderHandlerTest {
         final ResourceProviderHandler h = createRPHandler(leaveProvider, "my-pid", 0, servletpath);
         ResourceResolverFactoryActivator activator = new ResourceResolverFactoryActivator();
         activator.resourceAccessSecurityTracker = new ResourceAccessSecurityTracker();
-        ResourceResolver resolver = new ResourceResolverImpl(new CommonResourceResolverFactoryImpl(activator), false, null, new ResourceProviderStorageProvider() {
+        ResourceResolver resolver = new ResourceResolverImpl(new CommonResourceResolverFactoryImpl(activator, metricsService), false, null, new ResourceProviderStorageProvider() {
                 
                 @Override
                 public ResourceProviderStorage getResourceProviderStorage() {

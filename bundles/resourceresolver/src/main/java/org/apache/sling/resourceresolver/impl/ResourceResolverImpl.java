@@ -93,8 +93,8 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
 
     private MetricsService metricsService;
     private Counter countNonExistingSource;
-    private Timer timerAbsoluteResource;
-    private Timer.Context contextAbsoluteResource;
+    private Timer timercAbsoluteResource;
+    private Timer.Context cAbsoluteResource;
 
     private volatile Exception closedResolverException;
 
@@ -105,10 +105,10 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
         metricsService = this.metricsService;
         if(metricsService == null){
             countNonExistingSource = null;
-            timerAbsoluteResource = null;
+            timercAbsoluteResource = null;
         } else {
             countNonExistingSource = metricsService.counter("ResourceResolverImpl-Non-Existing-Source-Found");
-            timerAbsoluteResource = metricsService.timer("sling.resourceresolver_RRImpl-Duration-of-getting-absoluteResourc");
+            timercAbsoluteResource = metricsService.timer("sling.resourceresolver_RRImpl-Duration-of-getting-absoluteResourc");
 
         }
     }
@@ -1057,6 +1057,14 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
         return null;
     }
 
+    /*################# check if metricsService is Null cause of a Null pointer exception##############*/
+   /* public void checkMetricsService(Timer.Context context){
+        if(metricsService == null){
+            return;
+        }
+
+    } */
+
     /**
      * Creates a resource with the given path if existing
      */
@@ -1072,16 +1080,16 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
         } else {
             parentToUse = null;
         }
-        contextAbsoluteResource = timerAbsoluteResource.time();
+        if(metricsService!=null){cAbsoluteResource = timercAbsoluteResource.time();}
         final Resource resource = this.control.getResource(this.context, path, parentToUse, parameters, isResolve);
         if (resource != null) {
             resource.getResourceMetadata().setResolutionPath(path);
             resource.getResourceMetadata().setParameterMap(parameters);
 
-            contextAbsoluteResource.stop();
+            if(metricsService!=null){cAbsoluteResource.stop();}
             return resource;
         }
-        contextAbsoluteResource.stop();
+        if(metricsService!=null){cAbsoluteResource.stop();}
 
         logger.debug("getResourceInternal: Cannot resolve path '{}' to a resource", path);
         return null;

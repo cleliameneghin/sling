@@ -36,6 +36,7 @@ import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.commons.metrics.MetricsService;
 import org.apache.sling.resourceresolver.impl.helper.ResourceDecoratorTracker;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderHandler;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderStorage;
@@ -52,6 +53,7 @@ public abstract class ResourceDecoratorTestBase {
 
     protected ResourceResolver resolver;
     protected static final String QUERY_LANGUAGE = "some.funnny.language";
+    private MetricsService metricsService = null;
 
     protected abstract Resource wrapResourceForTest(Resource resource);
 
@@ -131,7 +133,7 @@ public abstract class ResourceDecoratorTestBase {
         };
 
         ResourceResolverFactoryActivator activator = new ResourceResolverFactoryActivator();
-        final CommonResourceResolverFactoryImpl crf = new CommonResourceResolverFactoryImpl(activator) {
+        final CommonResourceResolverFactoryImpl crf = new CommonResourceResolverFactoryImpl(activator, metricsService) {
             @Override
             public ResourceDecoratorTracker getResourceDecoratorTracker() {
                 return t;

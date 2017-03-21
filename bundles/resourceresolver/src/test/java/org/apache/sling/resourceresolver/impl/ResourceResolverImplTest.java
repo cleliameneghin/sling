@@ -638,7 +638,7 @@ public class ResourceResolverImplTest {
     private PathBasedResourceResolverImpl getPathBasedResourceResolver(String[] searchPaths) {
         try {
             final List<ResourceResolver> resolvers = new ArrayList<ResourceResolver>();
-            final PathBasedResourceResolverImpl resolver = new PathBasedResourceResolverImpl(resolvers, resourceProviderTracker, searchPaths);
+            final PathBasedResourceResolverImpl resolver = new PathBasedResourceResolverImpl(resolvers, resourceProviderTracker, searchPaths, metricsService);
             resolvers.add(resolver);
             return resolver;
         }
@@ -651,10 +651,10 @@ public class ResourceResolverImplTest {
 
         private final Map<String, Resource> resources = new HashMap<String, Resource>();
         private final String[] searchPaths;
-        public MetricsService metricsService = null;
 
-        public PathBasedResourceResolverImpl(final List<ResourceResolver> resolvers, final ResourceProviderTracker resourceProviderTracker, String[] searchPaths) throws LoginException {
-            this(new CommonResourceResolverFactoryImpl(new ResourceResolverFactoryActivator(), MetricsService metricsService){
+
+        public PathBasedResourceResolverImpl(final List<ResourceResolver> resolvers, final ResourceProviderTracker resourceProviderTracker, String[] searchPaths, MetricsService metricsService) throws LoginException {
+            this(new CommonResourceResolverFactoryImpl(new ResourceResolverFactoryActivator(),metricsService){
                 @Override
                 public ResourceResolver getAdministrativeResourceResolver(
                         Map<String, Object> authenticationInfo) throws LoginException {

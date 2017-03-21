@@ -23,6 +23,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.commons.metrics.MetricsService;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderTracker;
 import org.junit.Before;
 import org.junit.Test;
@@ -30,11 +31,12 @@ import org.junit.Test;
 public class ResourceResolverFactoryTest {
 
     private CommonResourceResolverFactoryImpl commonFactory;
+    private MetricsService metricsService = null;
 
     @Before public void setup() {
         ResourceResolverFactoryActivator activator = new ResourceResolverFactoryActivator();
         activator.resourceProviderTracker = new ResourceProviderTracker();
-        commonFactory = new CommonResourceResolverFactoryImpl(activator);
+        commonFactory = new CommonResourceResolverFactoryImpl(activator, metricsService);
     }
 
     @Test public void testSingleThreadLocal() throws Exception {
