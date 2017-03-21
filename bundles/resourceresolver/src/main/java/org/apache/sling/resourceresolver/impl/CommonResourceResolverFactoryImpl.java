@@ -97,7 +97,7 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
     /**
      * Create a new common resource resolver factory.
      */
-    public CommonResourceResolverFactoryImpl(final ResourceResolverFactoryActivator activator, final MetricsService metricsService) {
+    public CommonResourceResolverFactoryImpl(final ResourceResolverFactoryActivator activator, MetricsService metricsService) {
         this.activator = activator;
         this.metricsService = metricsService;
         this.logUnclosedResolvers = activator.isLogUnclosedResourceResolvers();

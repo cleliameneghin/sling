@@ -60,7 +60,6 @@ import org.osgi.framework.FrameworkUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.sling.commons.metrics.MetricsService;
-import org.apache.sling.commons.metrics.Meter;
 
 /**
  * This class takes a number of {@link AuthenticatedResourceProvider} objects and
@@ -72,16 +71,10 @@ import org.apache.sling.commons.metrics.Meter;
  */
 public class ResourceResolverControl {
 
-    @Reference
     private MetricsService metricsService;
-    private Meter meter;
 
     private static final Logger logger = LoggerFactory.getLogger(ResourceResolverControl.class);
 
-    @Activate
-    private void activate (){
-        meter = metricsService.meter("ResourceResolverImpl-Meter");
-    }
 
     private static final String[] FORBIDDEN_ATTRIBUTES = new String[] {
             ResourceResolverFactory.PASSWORD,
@@ -108,8 +101,21 @@ public class ResourceResolverControl {
      * Create a new resource resolver context.
      */
     public ResourceResolverControl(final boolean isAdmin,
-            final Map<String, Object> authenticationInfo,
-            final ResourceProviderStorageProvider resourceProviderTracker) {
+                                   final Map<String, Object> authenticationInfo,
+                                   final ResourceProviderStorageProvider resourceProviderTracker, MetricsService metricsService) {
+        this.authenticatedProviders = new IdentityHashMap<ResourceProviderHandler, Object>();
+        this.authenticationInfo = authenticationInfo;
+        this.isAdmin = isAdmin;
+        this.resourceProviderTracker = resourceProviderTracker;
+        this.metricsService = metricsService;
+    }
+
+    /**
+     * Create a new resource resolver context.
+     */
+    public ResourceResolverControl(final boolean isAdmin,
+                                   final Map<String, Object> authenticationInfo,
+                                   final ResourceProviderStorageProvider resourceProviderTracker) {
         this.authenticatedProviders = new IdentityHashMap<ResourceProviderHandler, Object>();
         this.authenticationInfo = authenticationInfo;
         this.isAdmin = isAdmin;
@@ -224,8 +230,8 @@ public class ResourceResolverControl {
      * {@link #listChildren(Resource)}.
      */
     public Resource getResource(final ResourceResolverContext context,
-            String path, Resource parent, Map<String, String> parameters,
-            boolean isResolve) {
+                                String path, Resource parent, Map<String, String> parameters,
+                                boolean isResolve) {
         if (path == null || path.length() == 0 || path.charAt(0) != '/') {
             logger.debug("Not absolute {}", path);
             return null; // path must be absolute
@@ -235,8 +241,7 @@ public class ResourceResolverControl {
         if ( provider != null ) {
             final Resource resourceCandidate = provider.getResource(path, parent, parameters);
             if (resourceCandidate != null) {
-                meter.mark();
-                return resourceCandidate;
+               return resourceCandidate;
             }
         }
 
@@ -384,8 +389,8 @@ public class ResourceResolverControl {
      * @return The new resource
      */
     public Resource create(final ResourceResolverContext context,
-            final String path, final Map<String, Object> properties)
-                    throws PersistenceException {
+                           final String path, final Map<String, Object> properties)
+            throws PersistenceException {
         final AuthenticatedResourceProvider provider = getBestMatchingModifiableProvider(context, path);
         if ( provider != null ) {
             final Resource creationResultResource = provider.create(context.getResourceResolver(), path, properties);
@@ -462,7 +467,7 @@ public class ResourceResolverControl {
      * Queries all resource providers and combines the results.
      */
     public Iterator<Resource> findResources(final ResourceResolverContext context,
-            final String query, final String language) {
+                                            final String query, final String language) {
         final List<AuthenticatedResourceProvider> queryableRP = getQueryableProviders(context, language);
         final List<Iterator<Resource>> iterators = new ArrayList<Iterator<Resource>>(queryableRP.size());
         for (AuthenticatedResourceProvider p : queryableRP) {
@@ -487,7 +492,7 @@ public class ResourceResolverControl {
      * Queries all resource providers and combines the results.
      */
     public Iterator<Map<String, Object>> queryResources(final ResourceResolverContext context,
-            final String query, final String language) {
+                                                        final String query, final String language) {
         final List<AuthenticatedResourceProvider> queryableRP = getQueryableProviders(context, language);
         final List<Iterator<Map<String, Object>>> iterators = new ArrayList<Iterator<Map<String, Object>>>(queryableRP.size());
         for (AuthenticatedResourceProvider p : queryableRP) {
@@ -512,7 +517,7 @@ public class ResourceResolverControl {
     }
 
     private AuthenticatedResourceProvider checkSourceAndDest(final ResourceResolverContext context,
-            final String srcAbsPath, final String destAbsPath) throws PersistenceException {
+                                                             final String srcAbsPath, final String destAbsPath) throws PersistenceException {
         // check source
         final Node<ResourceProviderHandler> srcNode = getResourceProviderStorage().getTree().getBestMatchingNode(srcAbsPath);
         if ( srcNode == null ) {
@@ -559,7 +564,7 @@ public class ResourceResolverControl {
     }
 
     private boolean collectProviders(final ResourceResolverContext context,
-            final Node<ResourceProviderHandler> parent) {
+                                     final Node<ResourceProviderHandler> parent) {
         boolean hasMoreProviders = false;
         for (final Entry<String, Node<ResourceProviderHandler>> entry : parent.getChildren().entrySet()) {
             if ( entry.getValue().getValue() != null ) {
@@ -593,7 +598,7 @@ public class ResourceResolverControl {
      * Returns false if there's no such provider.
      */
     public Resource copy(final ResourceResolverContext context,
-            final String srcAbsPath, final String destAbsPath) throws PersistenceException {
+                         final String srcAbsPath, final String destAbsPath) throws PersistenceException {
         final AuthenticatedResourceProvider optimizedSourceProvider = checkSourceAndDest(context, srcAbsPath, destAbsPath);
         if ( optimizedSourceProvider != null && optimizedSourceProvider.copy(srcAbsPath, destAbsPath) ) {
             return this.getResource(context, destAbsPath + '/' + ResourceUtil.getName(srcAbsPath), null, null, false);
@@ -621,7 +626,7 @@ public class ResourceResolverControl {
      * Returns false if there's no such provider.
      */
     public Resource move(final ResourceResolverContext context,
-            String srcAbsPath, String destAbsPath) throws PersistenceException {
+                         String srcAbsPath, String destAbsPath) throws PersistenceException {
         final AuthenticatedResourceProvider optimizedSourceProvider = checkSourceAndDest(context, srcAbsPath, destAbsPath);
         if ( optimizedSourceProvider != null && optimizedSourceProvider.move(srcAbsPath, destAbsPath) ) {
             return this.getResource(context, destAbsPath + '/' + ResourceUtil.getName(srcAbsPath), null, null, false);
@@ -652,7 +657,7 @@ public class ResourceResolverControl {
      * @return
      */
     private @CheckForNull AuthenticatedResourceProvider getBestMatchingProvider(final ResourceResolverContext context,
-            final String path) {
+                                                                                final String path) {
         try {
             final Node<ResourceProviderHandler> node = resourceProviderTracker.getResourceProviderStorage().getTree().getBestMatchingNode(path);
             return node == null ? null : context.getProviderManager().getOrCreateProvider(node.getValue(), this);
@@ -804,7 +809,7 @@ public class ResourceResolverControl {
     }
 
     public void registerAuthenticatedProvider(@Nonnull ResourceProviderHandler handler,
-            @CheckForNull Object providerState) {
+                                              @CheckForNull Object providerState) {
         this.authenticatedProviders.put(handler, providerState);
     }
 

@@ -49,6 +49,7 @@ import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ResourceWrapper;
 import org.apache.sling.commons.metrics.Counter;
 import org.apache.sling.commons.metrics.MetricsService;
+import org.apache.sling.commons.metrics.Timer;
 import org.apache.sling.resourceresolver.impl.helper.RedirectResource;
 import org.apache.sling.resourceresolver.impl.helper.ResourceIteratorDecorator;
 import org.apache.sling.resourceresolver.impl.helper.ResourcePathIterator;
@@ -92,6 +93,8 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
 
     private MetricsService metricsService;
     private Counter countNonExistingSource;
+    private Timer timerAbsoluteResource;
+    private Timer.Context contextAbsoluteResource;
 
     private volatile Exception closedResolverException;
 
@@ -102,8 +105,10 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
         metricsService = this.metricsService;
         if(metricsService == null){
             countNonExistingSource = null;
+            timerAbsoluteResource = null;
         } else {
             countNonExistingSource = metricsService.counter("ResourceResolverImpl-Non-Existing-Source-Found");
+            timerAbsoluteResource = metricsService.timer("sling.resourceresolver_RRImpl-Duration-of-getting-absoluteResourc");
 
         }
     }
@@ -159,8 +164,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
             final Map<String, Object> authenticationInfo,
             final boolean isAdmin)
     throws LoginException {
-        final ResourceResolverControl control = new ResourceResolverControl(isAdmin, authenticationInfo, resourceProviderTracker);
-
+        final ResourceResolverControl control = new ResourceResolverControl(isAdmin, authenticationInfo, resourceProviderTracker,metricsService);
         this.context.getProviderManager().authenticateAll(resourceProviderTracker.getResourceProviderStorage().getAuthRequiredHandlers(), control);
 
         return control;
@@ -1068,13 +1072,16 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
         } else {
             parentToUse = null;
         }
-
+        contextAbsoluteResource = timerAbsoluteResource.time();
         final Resource resource = this.control.getResource(this.context, path, parentToUse, parameters, isResolve);
         if (resource != null) {
             resource.getResourceMetadata().setResolutionPath(path);
             resource.getResourceMetadata().setParameterMap(parameters);
+
+            contextAbsoluteResource.stop();
             return resource;
         }
+        contextAbsoluteResource.stop();
 
         logger.debug("getResourceInternal: Cannot resolve path '{}' to a resource", path);
         return null;
