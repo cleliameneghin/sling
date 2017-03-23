@@ -20,6 +20,7 @@ package org.apache.sling.resourceresolver.impl;
 
 import static org.apache.commons.lang.StringUtils.defaultString;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -48,6 +49,7 @@ import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ResourceWrapper;
 import org.apache.sling.commons.metrics.Counter;
+import org.apache.sling.commons.metrics.Meter;
 import org.apache.sling.commons.metrics.MetricsService;
 import org.apache.sling.commons.metrics.Timer;
 import org.apache.sling.resourceresolver.impl.helper.RedirectResource;
@@ -92,9 +94,9 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
     private final ResourceResolverContext context;
 
     private MetricsService metricsService;
-    private Counter countNonExistingSource;
-    private Timer timercAbsoluteResource;
-    private Timer.Context cAbsoluteResource;
+    private Timer timerAbsoluteResource;
+    private Meter meter;
+    private Counter countNonExistingResource;
 
     private volatile Exception closedResolverException;
 
@@ -102,15 +104,9 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
     public ResourceResolverImpl(final CommonResourceResolverFactoryImpl factory, final boolean isAdmin, final Map<String, Object> authenticationInfo, MetricsService metricsService) throws LoginException {
 
         this(factory, isAdmin, authenticationInfo, factory.getResourceProviderTracker());
-        metricsService = this.metricsService;
-        if(metricsService == null){
-            countNonExistingSource = null;
-            timercAbsoluteResource = null;
-        } else {
-            countNonExistingSource = metricsService.counter("ResourceResolverImpl-Non-Existing-Source-Found");
-            timercAbsoluteResource = metricsService.timer("sling.resourceresolver_RRImpl-Duration-of-getting-absoluteResourc");
 
-        }
+        this.metricsService = metricsService;
+
     }
 
 
@@ -120,15 +116,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
             this.context = new ResourceResolverContext(this, factory.getResourceAccessSecurityTracker());
             this.control = createControl(resourceProviderTracker, authenticationInfo, isAdmin);
             this.factory.register(this, control);
-/*###################do I even need this here?#######################*/
-            metricsService = this.metricsService;
-            if(metricsService == null){
-                countNonExistingSource = null;
-            } else {
-                countNonExistingSource = metricsService.counter("ResourceResolverImpl-Non-Existing-Source-Found");
-
-            }
-        }
+         }
 
 
 
@@ -397,7 +385,8 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
 
         // if no resource has been found, use a NonExistingResource
         if (res == null) {
-            countNonExistingSource.increment();
+            countNonExistingResource = metricsService.counter("resourceresolver.impl.RRimpl-Count-NonExistingResource");
+            countNonExistingResource.increment();
             final ParsedParameters parsedPath = new ParsedParameters(realPathList[0]);
             final String resourcePath = ensureAbsPath(parsedPath.getRawPath());
             logger.debug("resolve: Path {} does not resolve, returning NonExistingResource at {}", absPath, resourcePath);
@@ -1057,13 +1046,23 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
         return null;
     }
 
-    /*################# check if metricsService is Null cause of a Null pointer exception##############*/
-   /* public void checkMetricsService(Timer.Context context){
+    /**
+     * Check if metricsService is Null cause of a Null pointer exception
+     * If its not Null then the Timer will be started
+     * */
+    private void startTimer(Timer timer){
         if(metricsService == null){
             return;
         }
+        timer.time();
+    }
 
-    } */
+    private void stopTimer(Timer timer){
+        if(metricsService == null){
+            return;
+        }
+        timer.time().stop();
+    }
 
     /**
      * Creates a resource with the given path if existing
@@ -1080,19 +1079,24 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
         } else {
             parentToUse = null;
         }
-        if(metricsService!=null){cAbsoluteResource = timercAbsoluteResource.time();}
-        final Resource resource = this.control.getResource(this.context, path, parentToUse, parameters, isResolve);
-        if (resource != null) {
-            resource.getResourceMetadata().setResolutionPath(path);
-            resource.getResourceMetadata().setParameterMap(parameters);
+        try {
+           if(metricsService != null){ meter = metricsService.meter("resourceresolver.impl.RRimpl-Requests-per-second-getResource-AbsoluteResource");
+            meter.mark();
+            timerAbsoluteResource = metricsService.timer("resourceresolver.impl.RRImpl-Duration-of-getting-AbsoluteResource");}
+            startTimer(timerAbsoluteResource);
+            final Resource resource = this.control.getResource(this.context, path, parentToUse, parameters, isResolve);
+            if (resource != null) {
+                resource.getResourceMetadata().setResolutionPath(path);
+                resource.getResourceMetadata().setParameterMap(parameters);
 
-            if(metricsService!=null){cAbsoluteResource.stop();}
-            return resource;
+                return resource;
+            }
+
+            logger.debug("getResourceInternal: Cannot resolve path '{}' to a resource", path);
+            return null;
+        } finally {
+            stopTimer(timerAbsoluteResource);
         }
-        if(metricsService!=null){cAbsoluteResource.stop();}
-
-        logger.debug("getResourceInternal: Cannot resolve path '{}' to a resource", path);
-        return null;
     }
 
     /**
@@ -1239,12 +1243,13 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
      * @see org.apache.sling.api.resource.ResourceResolver#getParentResourceType(org.apache.sling.api.resource.Resource)
      */
     @Override
-    public String getParentResourceType(final Resource resource) {
+    public String getParentResourceType(final Resource originalResource) {
+       final Resource resource = (Resource) new ResourceTypeWrapper(originalResource);
         String resourceSuperType = null;
         if ( resource != null ) {
             resourceSuperType = resource.getResourceSuperType();
             if (resourceSuperType == null) {
-                resourceSuperType = this.getParentResourceType(resource.getResourceType());
+                resourceSuperType = this.getParentResourceType(originalResource.getResourceType());
             }
         }
         return resourceSuperType;
@@ -1289,6 +1294,8 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
         }
         return result;
     }
+
+
 
     /**
      * @see org.apache.sling.api.resource.ResourceResolver#refresh()
@@ -1335,5 +1342,42 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
             rsrc = this.factory.getResourceDecoratorTracker().decorate(rsrc);
         }
         return rsrc;
+    }
+
+
+    /**Wrap a ResourceType to generate metrics counting and measuring the requests per second of each Resource Type*/
+    private class ResourceTypeWrapper extends ResourceWrapper{
+
+        ResourceTypeWrapper(Resource resource){
+            super(resource);
+        }
+
+        private void computeMetrics(String resourceTyp){
+            if (metricsService == null){
+                logger.warn("Missing MetricsService, cannot compute metrics for resource",resourceTyp);
+                return;
+            }
+            metricsService.histogram("resourceresolver.update.resourceTyp.-"+resourceTyp).update(resourceTyp);
+            metricsService.meter("resourceresolver.mark.resourceTyp.-"+resourceTyp).mark();
+        }
+
+        @Override
+        public String getResourceType() {
+            String resourceType= super.getResource().getResourceType();
+            computeMetrics(resourceType);
+            return resourceType;
+        }
+
+        /**
+         * Returns the value of calling <code>getResourceSuperType</code> on the
+         * {@link #getResource() wrapped resource}.
+         */
+        @Override
+        public String getResourceSuperType() {
+           String resourceType = super.getResource().getResourceSuperType();
+            computeMetrics(resourceType);
+            return resourceType;
+        }
+
     }
 }
