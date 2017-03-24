@@ -270,6 +270,8 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
     }
 
     private Resource resolveInternal(final HttpServletRequest request, String absPath) {
+        countNonExistingResource = metricsService.counter("resourceresolver.count-NonExistingResource");
+
         // make sure abspath is not null and is absolute
         if (absPath == null) {
             absPath = "/";
@@ -385,7 +387,6 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
 
         // if no resource has been found, use a NonExistingResource
         if (res == null) {
-            countNonExistingResource = metricsService.counter("resourceresolver.impl.RRimpl-Count-NonExistingResource");
             countNonExistingResource.increment();
             final ParsedParameters parsedPath = new ParsedParameters(realPathList[0]);
             final String resourcePath = ensureAbsPath(parsedPath.getRawPath());
@@ -1080,9 +1081,9 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
             parentToUse = null;
         }
         try {
-           if(metricsService != null){ meter = metricsService.meter("resourceresolver.impl.RRimpl-Requests-per-second-getResource-AbsoluteResource");
+           if(metricsService != null){ meter = metricsService.meter("resourceresolver.mark-getAbsoluteResource");
             meter.mark();
-            timerAbsoluteResource = metricsService.timer("resourceresolver.impl.RRImpl-Duration-of-getting-AbsoluteResource");}
+            timerAbsoluteResource = metricsService.timer("resourceresolver.time-getting-AbsoluteResource");}
             startTimer(timerAbsoluteResource);
             final Resource resource = this.control.getResource(this.context, path, parentToUse, parameters, isResolve);
             if (resource != null) {
@@ -1357,8 +1358,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
                 logger.warn("Missing MetricsService, cannot compute metrics for resource",resourceTyp);
                 return;
             }
-            metricsService.histogram("resourceresolver.update.resourceTyp.-"+resourceTyp).update(resourceTyp);
-            metricsService.meter("resourceresolver.mark.resourceTyp.-"+resourceTyp).mark();
+            metricsService.meter("resourceresolver.mark-ResourceTyp.-"+resourceTyp).mark();
         }
 
         @Override
