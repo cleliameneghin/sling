@@ -48,6 +48,7 @@ import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ResourceWrapper;
 
+import org.apache.sling.commons.metrics.Counter;
 import org.apache.sling.commons.metrics.Meter;
 import org.apache.sling.commons.metrics.MetricsService;
 import org.apache.sling.commons.metrics.Timer;
@@ -98,6 +99,8 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
     private MetricsService metricsService;
     private Timer timerAbsoluteResource;
     private Meter meter;
+    private Counter countNonExistingResource;
+
     public ResourceResolverImpl(final CommonResourceResolverFactoryImpl factory, final boolean isAdmin, final Map<String, Object> authenticationInfo, MetricsService metricsService) throws LoginException {
 
         this(factory, isAdmin, authenticationInfo, factory.getResourceProviderTracker());
@@ -268,6 +271,8 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
 
     private Resource resolveInternal(final HttpServletRequest request, String absPath) {
         // make sure abspath is not null and is absolute
+     //Mistake-> TestFailure when building
+      //  countNonExistingResource = metricsService.counter("resourceresolver.count-NonExistingResource");
         if (absPath == null) {
             absPath = "/";
         } else if (!absPath.startsWith("/")) {
@@ -382,6 +387,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
 
         // if no resource has been found, use a NonExistingResource
         if (res == null) {
+            //countNonExistingResource.increment();
             final ParsedParameters parsedPath = new ParsedParameters(realPathList[0]);
             final String resourcePath = ensureAbsPath(parsedPath.getRawPath());
             logger.debug("resolve: Path {} does not resolve, returning NonExistingResource at {}", absPath, resourcePath);
