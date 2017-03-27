@@ -31,12 +31,11 @@ import org.junit.Test;
 public class ResourceResolverFactoryTest {
 
     private CommonResourceResolverFactoryImpl commonFactory;
-    private MetricsService metricsService = null;
 
     @Before public void setup() {
         ResourceResolverFactoryActivator activator = new ResourceResolverFactoryActivator();
         activator.resourceProviderTracker = new ResourceProviderTracker();
-        commonFactory = new CommonResourceResolverFactoryImpl(activator, metricsService);
+        commonFactory = new CommonResourceResolverFactoryImpl(activator);
     }
 
     @Test public void testSingleThreadLocal() throws Exception {

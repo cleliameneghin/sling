@@ -53,7 +53,6 @@ public class ResourceProviderEntryTest {
     private List<ResourceProviderHandler> providers = new ArrayList<ResourceProviderHandler>();
 
     private ResourceResolver providersBasedResolver;
-    private MetricsService metricsService = null;
 
     private ResourceResolver mockedRootResolver;
 
@@ -247,7 +246,7 @@ public class ResourceProviderEntryTest {
         if (providersBasedResolver == null) {
             final ResourceResolverFactoryActivator activator = new ResourceResolverFactoryActivator();
             activator.resourceAccessSecurityTracker = new ResourceAccessSecurityTracker();
-            providersBasedResolver = new ResourceResolverImpl(new CommonResourceResolverFactoryImpl(activator, metricsService), false, null,
+            providersBasedResolver = new ResourceResolverImpl(new CommonResourceResolverFactoryImpl(activator), false, null,
                     new ResourceProviderStorageProvider() {
 
                         @Override

@@ -53,7 +53,6 @@ public abstract class ResourceDecoratorTestBase {
 
     protected ResourceResolver resolver;
     protected static final String QUERY_LANGUAGE = "some.funnny.language";
-    private MetricsService metricsService = null;
 
     protected abstract Resource wrapResourceForTest(Resource resource);
 
@@ -133,7 +132,7 @@ public abstract class ResourceDecoratorTestBase {
         };
 
         ResourceResolverFactoryActivator activator = new ResourceResolverFactoryActivator();
-        final CommonResourceResolverFactoryImpl crf = new CommonResourceResolverFactoryImpl(activator, metricsService) {
+        final CommonResourceResolverFactoryImpl crf = new CommonResourceResolverFactoryImpl(activator) {
             @Override
             public ResourceDecoratorTracker getResourceDecoratorTracker() {
                 return t;
