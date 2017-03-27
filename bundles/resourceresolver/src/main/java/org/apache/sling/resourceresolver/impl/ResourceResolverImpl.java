@@ -48,7 +48,9 @@ import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ResourceWrapper;
 
+import org.apache.sling.commons.metrics.Meter;
 import org.apache.sling.commons.metrics.MetricsService;
+import org.apache.sling.commons.metrics.Timer;
 import org.apache.sling.resourceresolver.impl.helper.RedirectResource;
 import org.apache.sling.resourceresolver.impl.helper.ResourceIteratorDecorator;
 import org.apache.sling.resourceresolver.impl.helper.ResourcePathIterator;
@@ -94,6 +96,8 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
     private volatile Exception closedResolverException;
 
     private MetricsService metricsService;
+    private Timer timerAbsoluteResource;
+    private Meter meter;
     public ResourceResolverImpl(final CommonResourceResolverFactoryImpl factory, final boolean isAdmin, final Map<String, Object> authenticationInfo, MetricsService metricsService) throws LoginException {
 
         this(factory, isAdmin, authenticationInfo, factory.getResourceProviderTracker());
@@ -1038,6 +1042,23 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
     }
 
 
+    /**
+     * Check if metricsService is Null cause of a Null pointer exception
+     * If its not Null then the Timer will be started
+     * */
+    private void startTimer(Timer timer){
+        if(metricsService == null){
+            return;
+        }
+        timer.time();
+    }
+
+    private void stopTimer(Timer timer){
+        if(metricsService == null){
+            return;
+        }
+        timer.time().stop();
+    }
 
     /**
      * Creates a resource with the given path if existing
@@ -1054,6 +1075,12 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
         } else {
             parentToUse = null;
         }
+        //outcommend cause result isn't as expected will do a review on this again
+        /*try {
+            if(metricsService != null){ meter = metricsService.meter("resourceresolver.mark-getAbsoluteResource");
+                meter.mark();
+                timerAbsoluteResource = metricsService.timer("resourceresolver.time-getting-AbsoluteResource");}
+                startTimer(timerAbsoluteResource);*/
             final Resource resource = this.control.getResource(this.context, path, parentToUse, parameters, isResolve);
             if (resource != null) {
                 resource.getResourceMetadata().setResolutionPath(path);
@@ -1063,6 +1090,9 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
             }
 
             logger.debug("getResourceInternal: Cannot resolve path '{}' to a resource", path);
+       /* } finally {
+            stopTimer(timerAbsoluteResource);
+        }*/
             return null;
 
     }
