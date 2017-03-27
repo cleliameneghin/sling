@@ -32,7 +32,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.annotation.Nonnull;
-
+import org.apache.sling.commons.metrics.MetricsService;
 import org.apache.commons.collections.BidiMap;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -69,7 +69,7 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
 
     /** The activator */
     private final ResourceResolverFactoryActivator activator;
-
+    private MetricsService metricsService;
     /**
      * Thread local holding the resource resolver stack
      */
@@ -95,8 +95,9 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
     /**
      * Create a new common resource resolver factory.
      */
-    public CommonResourceResolverFactoryImpl(final ResourceResolverFactoryActivator activator) {
+    public CommonResourceResolverFactoryImpl(final ResourceResolverFactoryActivator activator, MetricsService metricsService) {
         this.activator = activator;
+        this.metricsService = metricsService;
         this.logUnclosedResolvers = activator.isLogUnclosedResourceResolvers();
         this.refQueueThread = new Thread("Apache Sling Resource Resolver Finalizer Thread") {
 
@@ -259,7 +260,7 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
             throws LoginException {
         checkIsLive();
 
-        return new ResourceResolverImpl(this, isAdmin, authenticationInfo);
+        return new ResourceResolverImpl(this, isAdmin, authenticationInfo, metricsService);
     }
 
     /**

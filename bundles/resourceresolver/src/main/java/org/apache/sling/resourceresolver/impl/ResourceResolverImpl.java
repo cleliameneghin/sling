@@ -48,6 +48,7 @@ import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ResourceWrapper;
 
+import org.apache.sling.commons.metrics.MetricsService;
 import org.apache.sling.resourceresolver.impl.helper.RedirectResource;
 import org.apache.sling.resourceresolver.impl.helper.ResourceIteratorDecorator;
 import org.apache.sling.resourceresolver.impl.helper.ResourcePathIterator;
@@ -92,10 +93,11 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
 
     private volatile Exception closedResolverException;
 
-
-    public ResourceResolverImpl(final CommonResourceResolverFactoryImpl factory, final boolean isAdmin, final Map<String, Object> authenticationInfo) throws LoginException {
+    private MetricsService metricsService;
+    public ResourceResolverImpl(final CommonResourceResolverFactoryImpl factory, final boolean isAdmin, final Map<String, Object> authenticationInfo, MetricsService metricsService) throws LoginException {
 
         this(factory, isAdmin, authenticationInfo, factory.getResourceProviderTracker());
+        this.metricsService = metricsService;
 
 
     }
@@ -143,7 +145,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
             final Map<String, Object> authenticationInfo,
             final boolean isAdmin)
     throws LoginException {
-        final ResourceResolverControl control = new ResourceResolverControl(isAdmin, authenticationInfo, resourceProviderTracker);
+        final ResourceResolverControl control = new ResourceResolverControl(isAdmin, authenticationInfo, resourceProviderTracker, metricsService);
         this.context.getProviderManager().authenticateAll(resourceProviderTracker.getResourceProviderStorage().getAuthRequiredHandlers(), control);
 
         return control;
@@ -1209,12 +1211,14 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
      * @see org.apache.sling.api.resource.ResourceResolver#getParentResourceType(org.apache.sling.api.resource.Resource)
      */
     @Override
-    public String getParentResourceType(final Resource resource) {
+    public String getParentResourceType(final Resource originalResource) {
+        final Resource resource = new ResourceTypeWrapper(originalResource);
+
         String resourceSuperType = null;
         if ( resource != null ) {
             resourceSuperType = resource.getResourceSuperType();
             if (resourceSuperType == null) {
-                resourceSuperType = this.getParentResourceType(resource.getResourceType());
+                resourceSuperType = this.getParentResourceType(originalResource.getResourceType());
             }
         }
         return resourceSuperType;
@@ -1259,7 +1263,6 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
         }
         return result;
     }
-
 
 
     /**
@@ -1307,5 +1310,40 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
             rsrc = this.factory.getResourceDecoratorTracker().decorate(rsrc);
         }
         return rsrc;
+    }
+
+
+    /**Wrap a ResourceType to generate metrics counting and measuring the requests per second of each Resource Type*/
+    private class ResourceTypeWrapper extends ResourceWrapper{
+
+        ResourceTypeWrapper(Resource resource){
+            super(resource);
+            }
+
+        private void computeMetrics(String resourceTyp){
+            if (metricsService == null){
+                logger.warn("Missing MetricsService, cannot compute metrics for resource",resourceTyp);
+                return;
+                }
+            metricsService.meter("resourceresolver.mark-ResourceTyp.-"+resourceTyp).mark();
+            }
+
+        @Override
+        public String getResourceType() {
+            String resourceType= super.getResource().getResourceType();
+            computeMetrics(resourceType);
+            return resourceType;
+            }
+
+        /**
+         * Returns the value of calling <code>getResourceSuperType</code> on the
+         * {@link #getResource() wrapped resource}.
+         */
+        @Override
+        public String getResourceSuperType() {
+            String resourceType = super.getResource().getResourceSuperType();
+            computeMetrics(resourceType);
+            return resourceType;
+        }
     }
 }

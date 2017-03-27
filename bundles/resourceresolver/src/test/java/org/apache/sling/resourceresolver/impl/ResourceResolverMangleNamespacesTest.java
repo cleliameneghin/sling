@@ -97,7 +97,7 @@ public class ResourceResolverMangleNamespacesTest {
             }
         };
 
-        final CommonResourceResolverFactoryImpl fac = new CommonResourceResolverFactoryImpl(act);
+        final CommonResourceResolverFactoryImpl fac = new CommonResourceResolverFactoryImpl(act,metricsService);
 
         rr = new ResourceResolverImpl(fac, false, null, new ResourceProviderStorageProvider() {
             

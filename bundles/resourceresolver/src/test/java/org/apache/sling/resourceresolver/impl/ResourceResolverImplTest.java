@@ -48,6 +48,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.SyntheticResource;
+import org.apache.sling.commons.metrics.MetricsService;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderHandler;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderStorage;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderTracker;
@@ -68,6 +69,7 @@ public class ResourceResolverImplTest {
     private ResourceResolverFactoryImpl resFac;
 
     private ResourceProviderTracker resourceProviderTracker;
+    private MetricsService metricsService = null;
 
     @Before public void setup() throws LoginException {
         ResourceProvider<?> rp = new ResourceProvider<Object>() {
@@ -90,7 +92,7 @@ public class ResourceResolverImplTest {
         ResourceResolverFactoryActivator activator = new ResourceResolverFactoryActivator();
         activator.resourceProviderTracker = resourceProviderTracker;
         activator.resourceAccessSecurityTracker = new ResourceAccessSecurityTracker();
-        commonFactory = new CommonResourceResolverFactoryImpl(activator);
+        commonFactory = new CommonResourceResolverFactoryImpl(activator, metricsService);
         final Bundle usingBundle = mock(Bundle.class);
         resFac = new ResourceResolverFactoryImpl(commonFactory, usingBundle, null);
         resResolver = resFac.getAdministrativeResourceResolver(null);
@@ -211,7 +213,7 @@ public class ResourceResolverImplTest {
         when(config.resource_resolver_log_closing()).thenReturn(true);
         ResourceResolverFactoryActivator rrfa = spy(new ResourceResolverFactoryActivator());
         Whitebox.setInternalState(rrfa, "config", config);
-        CommonResourceResolverFactoryImpl crrfi = new CommonResourceResolverFactoryImpl(rrfa);
+        CommonResourceResolverFactoryImpl crrfi = new CommonResourceResolverFactoryImpl(rrfa, metricsService);
         final ResourceResolver rr = new ResourceResolverImpl(crrfi, false, null, resourceProviderTracker);
         assertTrue(rr.isLive());
         rr.close();
@@ -636,7 +638,7 @@ public class ResourceResolverImplTest {
     private PathBasedResourceResolverImpl getPathBasedResourceResolver(String[] searchPaths) {
         try {
             final List<ResourceResolver> resolvers = new ArrayList<ResourceResolver>();
-            final PathBasedResourceResolverImpl resolver = new PathBasedResourceResolverImpl(resolvers, resourceProviderTracker, searchPaths);
+            final PathBasedResourceResolverImpl resolver = new PathBasedResourceResolverImpl(resolvers, resourceProviderTracker, searchPaths, metricsService);
             resolvers.add(resolver);
             return resolver;
         }
@@ -651,8 +653,8 @@ public class ResourceResolverImplTest {
         private final String[] searchPaths;
 
 
-        public PathBasedResourceResolverImpl(final List<ResourceResolver> resolvers, final ResourceProviderTracker resourceProviderTracker, String[] searchPaths) throws LoginException {
-            this(new CommonResourceResolverFactoryImpl(new ResourceResolverFactoryActivator()){
+        public PathBasedResourceResolverImpl(final List<ResourceResolver> resolvers, final ResourceProviderTracker resourceProviderTracker, String[] searchPaths, MetricsService metricsService) throws LoginException {
+            this(new CommonResourceResolverFactoryImpl(new ResourceResolverFactoryActivator(),metricsService){
                 @Override
                 public ResourceResolver getAdministrativeResourceResolver(
                         Map<String, Object> authenticationInfo) throws LoginException {

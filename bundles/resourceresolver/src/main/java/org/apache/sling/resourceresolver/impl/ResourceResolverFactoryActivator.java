@@ -43,6 +43,7 @@ import org.apache.sling.resourceresolver.impl.providers.ResourceProviderTracker;
 import org.apache.sling.resourceresolver.impl.providers.ResourceProviderTracker.ChangeListener;
 import org.apache.sling.resourceresolver.impl.providers.RuntimeServiceImpl;
 import org.apache.sling.serviceusermapping.ServiceUserMapper;
+import org.apache.sling.commons.metrics.MetricsService;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -113,6 +114,9 @@ public class ResourceResolverFactoryActivator {
 
     @Reference
     ResourceAccessSecurityTracker resourceAccessSecurityTracker;
+
+    @Reference
+    MetricsService metricsService;
 
     volatile ResourceProviderTracker resourceProviderTracker;
 
@@ -480,7 +484,7 @@ public class ResourceResolverFactoryActivator {
             serviceProps.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
             serviceProps.put(Constants.SERVICE_DESCRIPTION, "Apache Sling Resource Resolver Factory");
 
-            local.commonFactory = new CommonResourceResolverFactoryImpl(this);
+            local.commonFactory = new CommonResourceResolverFactoryImpl(this,metricsService);
             local.commonFactory.activate(localContext);
             local.factoryRegistration = localContext.registerService(
                 ResourceResolverFactory.class, new ServiceFactory<ResourceResolverFactory>() {

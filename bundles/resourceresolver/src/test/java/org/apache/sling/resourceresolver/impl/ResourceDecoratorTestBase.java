@@ -55,6 +55,7 @@ public abstract class ResourceDecoratorTestBase {
     protected static final String QUERY_LANGUAGE = "some.funnny.language";
 
     protected abstract Resource wrapResourceForTest(Resource resource);
+   private MetricsService metricsService = null;
 
     @Before
     public void setup() throws LoginException {
@@ -132,7 +133,7 @@ public abstract class ResourceDecoratorTestBase {
         };
 
         ResourceResolverFactoryActivator activator = new ResourceResolverFactoryActivator();
-        final CommonResourceResolverFactoryImpl crf = new CommonResourceResolverFactoryImpl(activator) {
+        final CommonResourceResolverFactoryImpl crf = new CommonResourceResolverFactoryImpl(activator,metricsService) {
             @Override
             public ResourceDecoratorTracker getResourceDecoratorTracker() {
                 return t;

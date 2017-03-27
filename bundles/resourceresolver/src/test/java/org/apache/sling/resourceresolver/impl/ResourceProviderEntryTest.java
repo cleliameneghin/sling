@@ -56,6 +56,8 @@ public class ResourceProviderEntryTest {
 
     private ResourceResolver mockedRootResolver;
 
+    private MetricsService metricsService = null;
+
     @Before public void setUp() throws Exception {
         this.mockedRootResolver = Mockito.mock(ResourceResolver.class);
         this.providersBasedResolver = null;
@@ -246,7 +248,7 @@ public class ResourceProviderEntryTest {
         if (providersBasedResolver == null) {
             final ResourceResolverFactoryActivator activator = new ResourceResolverFactoryActivator();
             activator.resourceAccessSecurityTracker = new ResourceAccessSecurityTracker();
-            providersBasedResolver = new ResourceResolverImpl(new CommonResourceResolverFactoryImpl(activator), false, null,
+            providersBasedResolver = new ResourceResolverImpl(new CommonResourceResolverFactoryImpl(activator,metricsService), false, null,
                     new ResourceProviderStorageProvider() {
 
                         @Override

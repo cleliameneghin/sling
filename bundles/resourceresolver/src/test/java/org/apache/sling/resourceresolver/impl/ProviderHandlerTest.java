@@ -63,7 +63,7 @@ public class ProviderHandlerTest {
         final ResourceProviderHandler h = createRPHandler(leaveProvider, "my-pid", 0, servletpath);
         ResourceResolverFactoryActivator activator = new ResourceResolverFactoryActivator();
         activator.resourceAccessSecurityTracker = new ResourceAccessSecurityTracker();
-        ResourceResolver resolver = new ResourceResolverImpl(new CommonResourceResolverFactoryImpl(activator), false, null, new ResourceProviderStorageProvider() {
+        ResourceResolver resolver = new ResourceResolverImpl(new CommonResourceResolverFactoryImpl(activator,metricsService), false, null, new ResourceProviderStorageProvider() {
                 
                 @Override
                 public ResourceProviderStorage getResourceProviderStorage() {
