@@ -20,7 +20,6 @@ package org.apache.sling.resourceresolver.impl;
 
 import static org.apache.commons.lang.StringUtils.defaultString;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
